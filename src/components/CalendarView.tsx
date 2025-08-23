@@ -1,15 +1,16 @@
 /* src/components/CalendarView.tsx */
 import React, { useCallback, useRef } from "react";
-import FullCalendar, {
+import FullCalendar from "@fullcalendar/react";
+import type {
   DateSelectArg,
   EventAddArg,
   EventApi,
   EventChangeArg,
   EventInput,
   EventRemoveArg,
-  EventReceiveArg,
   EventMountArg
-} from "@fullcalendar/react";
+} from "@fullcalendar/core";
+import type { EventReceiveArg } from "@fullcalendar/interaction"; // ← вот отсюда!
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 

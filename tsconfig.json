@@ -21,5 +21,13 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "src-tauri/target",
+    // все варианты папок, начинающихся на 'v' в components
+    "src/components/v*"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
