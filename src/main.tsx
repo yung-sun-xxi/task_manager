@@ -8,14 +8,14 @@ import '@mantine/notifications/styles.css';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 
-/* базовые стили проекта */
+/* base project styles */
 import './index.css';
 
-/* ваши календарные темы, если подключаете из файлов */
+/* calendar themes if imported from files */
 import './google_calendar_theme.css';
 import './hourly_lines_15m.css';
 
-/* фикс модалок — ДОЛЖЕН идти ПОСЛЕ остальных css */
+/* modal fix — MUST come AFTER other css */
 import './modal_fix.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
