@@ -1,0 +1,28 @@
+<!-- project-root/index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TaskManager</title>
+
+    <!-- FullCalendar CSS (правильные пути!) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.15/main.min.css">
+
+    <!-- Твои стили (после FullCalendar) -->
+    <link rel="stylesheet" href="/src/google_calendar_theme.css">
+    <link rel="stylesheet" href="/src/hourly_lines_15m.css">
+
+    <!-- Модальные окна: последним, чтобы перебить всё -->
+    <link rel="stylesheet" href="/src/modal_fix.css">
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

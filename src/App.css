@@ -1,0 +1,194 @@
+/* src/App.css */
+.app-shell {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+}
+
+.sidebar {
+  width: 288px;
+  min-width: 288px;
+  flex: 0 0 288px;
+  height: 100%;
+  border-right: 1px solid rgba(0,0,0,0.08);
+  background: #fafafa;
+  overflow: hidden auto;
+}
+
+.main {
+  flex: 1 1 auto;
+  height: 100%;
+  overflow: hidden auto;
+  background: #fff;
+}
+
+.calendar-wrapper {
+  height: 100%;
+  padding: 8px 12px;
+}
+
+/* ---- Sidebar ---- */
+.sidebar-inner {
+  padding: 12px;
+}
+
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 8px 0 12px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tm-task-item {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: grab;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+}
+
+.tm-task-item:active {
+  cursor: grabbing;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.task-title {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.task-hours {
+  font-variant-numeric: tabular-nums;
+  color: #334155;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.task-desc {
+  color: #475569;
+  font-size: 12px;
+  margin-bottom: 6px;
+  white-space: pre-wrap;
+}
+
+.task-controls input[type="number"] {
+  width: 90px;
+}
+
+/* ---- Modal ---- */
+.tm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17,24,39,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.tm-modal {
+  width: min(560px, 92vw);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  padding: 18px;
+  position: relative;
+}
+
+.tm-modal-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tm-label {
+  display: block;
+  font-size: 12px;
+  color: #475569;
+  margin: 8px 0 4px;
+}
+
+.tm-input,
+.tm-textarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  outline: none;
+  font-size: 14px;
+}
+
+.tm-input:focus,
+.tm-textarea:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
+.tm-textarea {
+  resize: vertical;
+}
+
+.tm-modal-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.tm-btn-left {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+}
+
+.tm-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.tm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  font-weight: 500;
+  user-select: none;
+}
+
+.tm-btn:hover { background: #f8fafc; }
+.tm-btn-primary {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #fff;
+}
+.tm-btn-primary:hover { background: #2563eb; }
+.tm-btn-danger {
+  border-color: #f87171;
+  color: #b91c1c;
+  background: #fff;
+}
+.tm-btn-danger:hover { background: #fee2e2; }

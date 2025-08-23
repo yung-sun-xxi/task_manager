@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root{
+  --gc-line: #ff5ca8; /* розовая ЧАСОВАЯ линия */
+  --cal-bg: #fff;     /* фон календаря */
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--cal-bg);
+}
+
+/* Вертикальные разделители между днями (можешь убрать, если не нужны) */
+.rbc-time-content > * + * {
+  border-left: 1px solid #ddd !important;
+}
+
+/* ВАЖНО: выключаем линию у каждого слота по умолчанию */
+.rbc-time-slot {
+  border-top: 0 !important;
+}
+
+/* Ширина колонки с временем */
+.rbc-time-gutter {
+  width: 60px;
+}

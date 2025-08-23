@@ -1,0 +1,72 @@
+/* === Google Calendar-like for FullCalendar timeGrid === */
+:root{
+  --gc-line: #ff5ca8;        /* цвет ЧАСОВОЙ линии (розовый) */
+  --gc-axis: #e3e8f2;        /* вертикаль справа от колонки времени */
+  --gc-day-divider:#eef2f7;  /* вертикали между днями */
+  --gc-header:#e9edf5;       /* нижняя линия заголовка */
+  --cal-bg: #ffffff;
+}
+
+/* белый фон везде */
+.fc, .fc .fc-view-harness, .fc .fc-scrollgrid{ background: var(--cal-bg); }
+
+/* убираем системные рамки */
+.fc-theme-standard .fc-scrollgrid{ border:0; }
+.fc-theme-standard td, .fc-theme-standard th{ border:0; }
+
+/* header */
+.fc-col-header{ border-bottom:1px solid var(--gc-header); }
+.fc-col-header-cell{ border-left:1px solid var(--gc-day-divider); }
+.fc-col-header-cell:first-child{ border-left:0; }
+
+/* Time axis: правая граница */
+.fc-timegrid-axis{
+  border-right:1px solid var(--gc-axis);
+  background: var(--cal-bg);
+}
+
+/* ===== Горизонтали в ДНЕВНЫХ колонках ===== */
+/* 0) На всякий — выключаем любые «авто-линии» в слотах */
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  .fc-timegrid-slot .fc-timegrid-slot-lane::before,
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  .fc-timegrid-slot .fc-timegrid-slot-lane::after{
+  content: none !important;
+}
+
+/* 1) Прячем 15/30/45 (маскируем под фон), если рисуются border'ом у <td> */
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":15:00"] > td,
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":30:00"] > td,
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":45:00"] > td{
+  border-top-color: var(--cal-bg) !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* 2) Прячем 15/30/45, если рисуются псевдо-элементом у lane */
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":15:00"] .fc-timegrid-slot-lane::before,
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":30:00"] .fc-timegrid-slot-lane::before,
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":45:00"] .fc-timegrid-slot-lane::before{
+  background: var(--cal-bg) !important;
+  content: "" !important;
+}
+
+/* 3) Возвращаем часовую (:00) — РОЗОВОЙ (перекрывает любые правила темы) */
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-cols
+  tr[data-time$=":00:00"] > td{
+  border-top: 1px solid var(--gc-line) !important;
+}
+.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
+  .fc-timegrid-slot[data-time$=":00"] .fc-timegrid-slot-lane::before{
+  content: ""; position:absolute; left:0; right:0; top:0; height:1px;
+  background: var(--gc-line) !important;
+}
+
+/* вертикали между днями и разделитель */
+.fc-timegrid-divider{ background:transparent; }

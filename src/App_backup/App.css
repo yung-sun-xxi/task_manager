@@ -1,0 +1,114 @@
+/* src/App.css */
+/* Robust layout even if Tailwind classes don't load */
+.app-shell{
+  display:flex;
+  flex-direction:row;
+  height:100vh;
+  overflow:hidden;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+}
+.sidebar{
+  width:288px; /* 18rem */
+  min-width:288px;
+  flex:0 0 288px;
+  height:100%;
+  border-right:1px solid rgba(0,0,0,0.08);
+  background:#fafafa;
+  overflow:auto;
+  padding:16px;
+  box-sizing:border-box;
+}
+.main{
+  flex:1 1 auto;
+  min-width:0;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+.task-card{
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:10px;
+  padding:12px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+  margin-bottom:12px;
+}
+.task-title{ font-weight:600; margin-bottom:6px; }
+.task-meta{ font-size:12px; color:#6b7280; margin-bottom:8px; }
+.progress{ height:8px; background:#eef2f7; border-radius:6px; overflow:hidden; }
+.progress > span{ display:block; height:100%; background:#6366f1; transition:width .2s ease; }
+.task-row{ cursor:grab; }
+.task-row:active{ cursor:grabbing; }
+.header{ font-size:20px; font-weight:700; margin:0 0 12px; }
+
+
+/* --- Task modal overlay (pure CSS, no Tailwind required) --- */
+.tm-modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.tm-modal{
+  position: relative;
+  width: 520px;
+  max-width: 92vw;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 48px rgba(0,0,0,.25);
+  padding: 16px 20px 64px; /* доп паддинг под нижнюю панель кнопок */
+}
+.tm-modal-title{ font-size: 18px; font-weight: 600; margin: 4px 0 12px; }
+.tm-label{ display:block; font-size: 13px; margin: 6px 0 6px; }
+.tm-input, .tm-textarea{
+  width: 100%;
+  border: 1px solid rgba(0,0,0,.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+  transition: box-shadow .15s ease, border-color .15s ease;
+  margin-bottom: 10px;
+}
+.tm-textarea{ min-height: 96px; resize: vertical; }
+.tm-input:focus, .tm-textarea:focus{
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+}
+.tm-modal-actions{
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+}
+.tm-actions-left{}
+.tm-actions-right{ margin-left: auto; display: flex; gap: 8px; }
+
+.tm-btn{
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+.tm-btn:hover{ background: #f6f7fb; }
+.tm-btn-primary{
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #fff;
+}
+.tm-btn-primary:hover{ background: #2563eb; }
+.tm-btn-danger{
+  border-color: #f87171;
+  color: #b91c1c;
+  background: #fff;
+}
+.tm-btn-danger:hover{ background: #fee2e2; }

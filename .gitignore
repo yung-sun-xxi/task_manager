@@ -1,30 +1,24 @@
-# deps & builds
-node_modules
-dist
-build
-.out
-.next
-.turbo
-.parcel-cache
-coverage
-
-# logs & caches
+# Logs
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log
-.eslintcache
-.stylelintcache
-.vite
+pnpm-debug.log*
+lerna-debug.log*
 
-# env & local
-.env
-.env.*
-!.env.example
+node_modules
+dist
+dist-ssr
+*.local
 
-# editors/OS
-.DS_Store
-.idea
+# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

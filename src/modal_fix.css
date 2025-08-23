@@ -1,0 +1,116 @@
+/* ===== Modal hardening v3: define theme tokens + force opaque modals/popovers ===== */
+
+/* 1) Global design tokens (missing before, made dialogs transparent when using var(--surface), etc.) */
+:root{
+  /* App Theme */
+  --bg:       #f8fafc;   /* page background */
+  --surface:  #ffffff;   /* cards / modals background */
+  --text:     #0f172a;   /* text on surface */
+  --muted:    #64748b;   /* secondary text */
+  --border:   #e5e7eb;   /* card borders */
+  --accent:   #6366f1;   /* primary/accent */
+
+  /* Modal specifics */
+  --tm-modal-overlay: rgba(2, 6, 23, 0.45);
+  --tm-modal-bg: var(--surface);
+  --tm-modal-text: var(--text);
+  --tm-modal-radius: 16px;
+  --tm-modal-shadow: 0 24px 56px rgba(2, 6, 23, 0.22), 0 8px 20px rgba(2, 6, 23, 0.12);
+  --tm-modal-border: 1px solid var(--border);
+}
+
+/* 2) Backdrop/overlay — occupy whole screen; color via alpha, not element opacity */
+.tm-modal-backdrop,
+[data-tm-overlay],
+div[class*="modal-backdrop"],
+div[class*="dialog-backdrop"],
+.ReactModal__Overlay,
+.mantine-Overlay-root,
+.chakra-modal__overlay,
+.MuiBackdrop-root{
+  position: fixed !important;
+  inset: 0 !important;
+  background: var(--tm-modal-overlay) !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  z-index: 9998 !important;
+}
+
+/* Native <dialog> backdrop */
+dialog::backdrop{
+  background: var(--tm-modal-overlay) !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* 3) Ensure modal containers render fully and above app */
+.tm-modal,
+.tm-dialog,
+div[role="dialog"],
+[aria-modal="true"],
+dialog[open],
+.ReactModal__Content,
+.mantine-Modal-root,
+.chakra-modal__content-container,
+.MuiDialog-root{
+  z-index: 9999 !important;
+  opacity: 1 !important;
+}
+
+/* 4) The actual dialog/paper/popover cards — SOLID background */
+.tm-modal .tm-card,
+.tm-dialog .tm-card,
+.tm-modal .modal-card,
+.tm-dialog .modal-card,
+div[role="dialog"],
+[aria-modal="true"],
+dialog,
+.ReactModal__Content,
+.mantine-Modal-content,
+.chakra-modal__content,
+.MuiDialog-paper,
+.fc .fc-popover{
+  background: var(--tm-modal-bg) !important;
+  color: var(--tm-modal-text) !important;
+  border-radius: var(--tm-modal-radius) !important;
+  box-shadow: var(--tm-modal-shadow) !important;
+  border: var(--tm-modal-border) !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* FullCalendar popover internals */
+.fc .fc-popover .fc-popover-header{
+  background: var(--tm-modal-bg) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+.fc .fc-popover .fc-popover-body{
+  background: var(--tm-modal-bg) !important;
+  color: var(--text) !important;
+}
+
+/* Inputs/selects inside dialogs should be solid */
+div[role="dialog"] input, div[role="dialog"] select, div[role="dialog"] textarea,
+[aria-modal="true"] input, [aria-modal="true"] select, [aria-modal="true"] textarea,
+dialog input, dialog select, dialog textarea{
+  background: #fff !important;
+  color: var(--tm-modal-text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+}
+
+/* Kill inherited transparent inline backgrounds inside dialogs */
+div[role="dialog"] [style*="background: rgba"],
+[aria-modal="true"] [style*="background: rgba"],
+dialog [style*="background: rgba"]{
+  background: var(--tm-modal-bg) !important;
+}
+
+/* Safety: calendars stay opaque too */
+.fc, .fc .fc-view-harness, .fc .fc-scrollgrid{
+  background: var(--tm-modal-bg) !important;
+}
