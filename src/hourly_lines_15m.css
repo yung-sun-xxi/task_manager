@@ -6,11 +6,13 @@
   --cal-bg: #ffffff;
 }
 
-/* Применим пользовательский цвет фона к календарю */
+/* Убеждаемся, что фон календаря правильный */
 .fc .fc-timegrid-slots,
 .fc .fc-timegrid-axis {
   background: var(--cal-bg);
 }
+
+/* --- Горизонтальные линии --- */
 
 /* Настраиваем ячейку с меткой времени, чтобы она стала родительским элементом */
 .fc .fc-timegrid-slot-label[data-time$=":00:00"] {
@@ -21,30 +23,10 @@
 .fc .fc-timegrid-slot-label[data-time$=":00:00"]::after {
     content: "";
     position: absolute;
-    top: 50%; /* Смещаем линию на 50% от верха родителя */
-    left: 100%; /* Начинаем линию сразу после текста метки */
-    width: 1000vw; /* Растягиваем на очень большую ширину, чтобы она пересекла весь календарь */
+    top: 50%;
+    left: 100%;
+    width: 1000vw;
     height: 1px;
     background-color: var(--hour-line);
-    transform: translateY(-50%); /* Поднимаем линию на половину её собственной высоты для точного центрирования */
-}
-
-/* 2. Убираем все стандартные границы, которые могут мешать */
-.fc-timegrid-axis-cushion {
-    border: none !important;
-}
-
-.fc-timegrid-col-minor {
-    border-right: none !important;
-}
-
-.fc-timegrid-slot {
-    border-bottom: none !important;
-}
-
-/* Убираем стандартные тонкие линии для минут */
-.fc .fc-timegrid .fc-timegrid-slots .fc-timegrid-slot[data-time$=":15:00"],
-.fc .fc-timegrid .fc-timegrid-slots .fc-timegrid-slot[data-time$=":30:00"],
-.fc .fc-timegrid .fc-timegrid-slots .fc-timegrid-slot[data-time$=":45:00"] {
-  border-top: 0;
+    transform: translateY(-50%);
 }
