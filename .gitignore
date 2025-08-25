@@ -29,8 +29,9 @@ yarn-error.log*
 .idea
 .vscode/*
 !.vscode/extensions.json
-
-# (если у тебя Tauri)
 src-tauri/target
 **/*.dSYM
 EOF
+
+# other
+/scripts/
