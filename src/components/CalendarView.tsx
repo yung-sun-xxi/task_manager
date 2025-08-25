@@ -126,6 +126,7 @@ const CalendarView: React.FC<Props> = (props) => {
         allDaySlot={false}
         slotMinTime="09:00:00"
         slotMaxTime="21:15:00"
+        slotLabelInterval="01:00"
         slotLabelFormat={{
           hour: '2-digit',
           minute: '2-digit',
