@@ -90,7 +90,7 @@ const App: React.FC = () => {
     // Create a new task and event linked to it
     const taskId = genId("task");
     const est = Math.max(0.25, (end.getTime() - start.getTime()) / 36e5);
-    const newTask: Task = { id: taskId, title: "Task", description: "", estimateHours: Math.round(est * 4) / 4 };
+    const newTask: Task = { id: taskId, title: "New Task", description: "", estimateHours: Math.round(est * 4) / 4 };
     const newEvent: PlainEvent = {
       id: genId("ev"),
       title: newTask.title,
@@ -195,7 +195,7 @@ const App: React.FC = () => {
           >
             <h2 id="tm-modal-title" className="tm-modal-title">Task</h2>
 
-            <label className="tm-label" htmlFor="tm-task-title">Название</label>
+            <label className="tm-label" htmlFor="tm-task-title">Title</label>
             <input
               id="tm-task-title"
               className="tm-input"
@@ -209,7 +209,7 @@ const App: React.FC = () => {
               }}
             />
 
-            <label className="tm-label" htmlFor="tm-task-desc">Описание</label>
+            <label className="tm-label" htmlFor="tm-task-desc">Description</label>
             <textarea
               id="tm-task-desc"
               className="tm-textarea"
@@ -219,7 +219,7 @@ const App: React.FC = () => {
             />
 
             <div className="tm-row" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <label className="tm-label" htmlFor="tm-task-est">Оценка, ч</label>
+              <label className="tm-label" htmlFor="tm-task-est">Estimate, h</label>
               <input
                 id="tm-task-est"
                 className="tm-input"
@@ -230,7 +230,7 @@ const App: React.FC = () => {
                 onChange={(e) => setDraftEstimate(Number(e.target.value))}
               />
               <span style={{ marginLeft: "auto", opacity: 0.7 }}>
-                Запланировано: {allocations[editingTaskId || ""] || 0} ч
+                Planned: {allocations[editingTaskId || ""] || 0} h
               </span>
             </div>
 
@@ -241,11 +241,11 @@ const App: React.FC = () => {
                 onClick={(e) => deleteTask(e)}
                 data-testid="delete-task"
               >
-                Удалить таску
+                Delete task
               </button>
               <div className="tm-actions-right">
-                <button type="button" onClick={closeModal} className="tm-btn">Выйти / Cancel</button>
-                <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary">Сохранить</button>
+                <button type="button" onClick={closeModal} className="tm-btn">Cancel</button>
+                <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary">Save</button>
               </div>
             </div>
           </div>
