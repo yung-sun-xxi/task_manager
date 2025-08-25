@@ -1,89 +1,32 @@
 /* src/hourly_lines_15m.css */
 
 /* цвет часовой линии и фон */
-:root{
-  --hour-line: #ff5ca8;
+:root {
+  --hour-line: #ccc;
   --cal-bg: #ffffff;
 }
 
-/* Сносим любые дефолтные бордеры/линии у сетки */
-.fc .fc-timegrid .fc-timegrid-slots table,
-.fc .fc-timegrid .fc-timegrid-slots tr,
-.fc .fc-timegrid .fc-timegrid-slot,
-.fc .fc-timegrid .fc-timegrid-slot .fc-timegrid-slot-lane{
-  border: 0 !important;
+/* Убеждаемся, что фон календаря правильный */
+.fc .fc-timegrid-slots,
+.fc .fc-timegrid-axis {
+  background: var(--cal-bg);
 }
 
-/* По умолчанию ничего не рисуем псевдо-элементами */
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane::before,
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane::after{
-  content: none !important;
-}
+/* --- Горизонтальные линии --- */
 
-/* Подготовим ячейку к псевдо-элементу */
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane{
+/* Настраиваем ячейку с меткой времени, чтобы она стала родительским элементом */
+.fc .fc-timegrid-slot-label[data-time$=":00:00"] {
   position: relative;
 }
 
-/* Рисуем ТОЛЬКО часовую линию (:00) в дневных колонках */
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":00"],
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":00:00"]{
-  /* на всякий откл. бордеры/фоны, если тема что-то даёт */
-  border-top: 0 !important;
-  background-image: none !important;
-}
-
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":00"]::after,
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":00:00"]::after{
-  content: "";
-  position: absolute;
-  left: 0; right: 0; top: 0;
-  height: 1px;
-  background: var(--hour-line);
-  pointer-events: none;
-}
-
-/* 15 / 30 / 45 — полностью скрываем (градиенты/бордеры/псевдо) */
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":15"],
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":30"],
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":45"]{
-  border-top: 0 !important;
-  background: transparent !important;
-  background-image: none !important;
-}
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":15"]::after,
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":30"]::after,
-.fc .fc-timegrid .fc-timegrid-body .fc-timegrid-col
-  .fc-timegrid-slot.fc-timegrid-slot-lane[data-time$=":45"]::after{
-  content: none !important;
-}
-
-/* Ось времени (левая колонка): без фонов/линий и псевдо-элементов */
-.fc .fc-timegrid-axis,
-.fc .fc-timegrid-axis *{
-  background: var(--cal-bg) !important;
-  background-image: none !important;
-}
-.fc .fc-timegrid-axis .fc-timegrid-slot,
-.fc .fc-timegrid-axis .fc-timegrid-slot-lane{
-  border: 0 !important;
-}
-.fc .fc-timegrid-axis .fc-timegrid-slot-lane::before,
-.fc .fc-timegrid-axis .fc-timegrid-slot-lane::after{
-  content: none !important;
-}
-.fc-theme-standard .fc-timegrid .fc-timegrid-axis td{
-  border-color: transparent !important;
+/* 1. Создаем горизонтальную линию как псевдо-элемент */
+.fc .fc-timegrid-slot-label[data-time$=":00:00"]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 1000vw;
+    height: 1px;
+    background-color: var(--hour-line);
+    transform: translateY(-50%);
 }
