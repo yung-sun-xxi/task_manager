@@ -123,10 +123,31 @@ const CalendarView: React.FC<Props> = (props) => {
         droppable={true}
         editable={true}
         eventResizableFromStart={true}
+        allDaySlot={false}
+        slotMinTime="09:00:00"
+        slotMaxTime="21:15:00"
+        slotLabelFormat={{
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }}
+        dayHeaderFormat={{
+          weekday: 'short',
+          day: '2-digit',
+          month: '2-digit'
+        }}
+        customButtons={{
+          Today: {
+            text: 'Today',
+            click: () => {
+              (calRef.current as any)?.getApi().today();
+            }
+          }
+        }}
         headerToolbar={{
-          left: "prev,next today",
+          left: "prev,next Today",
           center: "title",
-          right: "timeGridDay,timeGridWeek",
+          right: "",
         }}
         events={fcEvents}
         select={handleSelect}

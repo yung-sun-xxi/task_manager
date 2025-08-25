@@ -45,7 +45,7 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
 
   return (
     <div className="tm-sidebar">
-      <h3 className="sidebar-title">Задачи</h3>
+      <h3 className="sidebar-title">Tasks</h3>
       <div className="task-list" ref={listRef}>
         {items.map((t) => {
           const planned = allocations[t.id] || 0;
@@ -65,12 +65,12 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
               </div>
 
               <div className="task-info">
-                Оценка: {t.estimateHours}ч • Запланировано: {planned}ч • Осталось: {remaining}ч
+                Estimate: {t.estimateHours}h • Planned: {planned}h • Remaining: {remaining}h
               </div>
 
               <div className="task-controls">
                 <label>
-                  Оценка, ч:&nbsp;
+                  Estimate, h:&nbsp;
                   <input
                     type="number"
                     step={0.25}
