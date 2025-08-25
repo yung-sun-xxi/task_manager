@@ -151,7 +151,7 @@ const App: React.FC = () => {
           onMouseDown={(evt) => evt.stopPropagation()}
         >
           <div className="tm-modal" onMouseDown={(evt) => evt.stopPropagation()} onClick={(evt) => evt.stopPropagation()}>
-            <h2 id="tm-modal-title" className="tm-modal-title">Задача</h2>
+            <h2 id="tm-modal-title" className="tm-modal-title">Task</h2>
 
             <label className="tm-label" htmlFor="tm-task-title">Название</label>
             <input
