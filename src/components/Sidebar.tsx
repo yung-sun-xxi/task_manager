@@ -14,81 +14,71 @@ type Props = {
   tasks: Task[];
   allocations: Record<string, number>;
   onEstimateChange: (taskId: string, estimate: number) => void;
+  onTaskDblClick?: (taskId: string) => void;
 };
 
-const palette = ["#3b82f6", "#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7"];
+const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick }) => {
+  const listRef = useRef<HTMLDivElement | null>(null);
 
-const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange }) => {
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  // Provide items (could sort later)
+  const items = useMemo(() => tasks, [tasks]);
 
-  // Make tasks draggable into the calendar
+  // Enable dragging from sidebar into calendar
   useEffect(() => {
-    if (!rootRef.current) return;
-    const draggable = new Draggable(rootRef.current, {
-      itemSelector: ".tm-task",
-      eventData: (el) => {
-        const id = el.getAttribute("data-task-id")!;
-        const title = el.getAttribute("data-title")!;
-        const color = el.getAttribute("data-color") || undefined;
-        return { title, extendedProps: { taskId: id }, backgroundColor: color, borderColor: color };
+    const el = listRef.current;
+    if (!el) return;
+    const draggable = new Draggable(el, {
+      itemSelector: ".tm-task-item",
+      eventData: (taskEl) => {
+        const id = taskEl.getAttribute("data-task-id") || "";
+        const title = taskEl.getAttribute("data-title") || "";
+        return {
+          title,
+          extendedProps: { taskId: id },
+        };
       },
     });
     return () => {
       draggable.destroy();
     };
-  }, [tasks]);
-
-  const tasksWithColor = useMemo(() => {
-    // assign deterministic color by index
-    return tasks.map((t, i) => ({ ...t, color: t.color || palette[i % palette.length] }));
-  }, [tasks]);
+  }, [items]);
 
   return (
-    <div className="tm-sidebar" ref={rootRef}>
-      <h3 style={{ padding: "12px 12px 4px", margin: 0 }}>Таски</h3>
-      <div style={{ padding: "0 12px 12px", fontSize: 12, opacity: 0.7 }}>
-        Перетащи на календар, чтобы запланировать. 15-мин. шаг.
-      </div>
-
-      <div className="tm-task-list" style={{ display: "grid", gap: 8, padding: 12 }}>
-        {tasksWithColor.map((t) => {
+    <div className="tm-sidebar">
+      <h3 className="sidebar-title">Задачи</h3>
+      <div className="task-list" ref={listRef}>
+        {items.map((t) => {
           const planned = allocations[t.id] || 0;
-          const left = Math.max(0, Math.round((t.estimateHours - planned) * 4) / 4);
+          const remaining = Math.max(0, (t.estimateHours || 0) - planned);
           return (
             <div
               key={t.id}
-              className="tm-task"
+              className="tm-task-item"
+              onDoubleClick={() => onTaskDblClick && onTaskDblClick(t.id)}
               data-task-id={t.id}
               data-title={t.title}
-              data-color={t.color}
-              style={{
-                border: "1px solid #e5e7eb",
-                borderLeftWidth: 6,
-                borderLeftColor: t.color,
-                borderRadius: 8,
-                padding: 10,
-                background: "white",
-                cursor: "grab",
-                userSelect: "none",
-              }}
+              draggable
             >
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>{t.title}</div>
-              {t.description && <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>{t.description}</div>}
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 12, opacity: 0.75 }}>
-                  Оценка: {t.estimateHours}ч • Запланировано: {planned}ч • Осталось: {left}ч
-                </span>
+              <div className="task-header">
+                <div className="task-title">{t.title}</div>
+                {t.description ? <div className="task-desc">{t.description}</div> : null}
               </div>
-              <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
-                <label style={{ fontSize: 12, opacity: 0.7 }}>Оценка, ч:</label>
-                <input
-                  type="number"
-                  step="0.25"
-                  min={0}
-                  value={t.estimateHours}
-                  onChange={(e) => onEstimateChange(t.id, Math.max(0, Number(e.target.value)))}
-                  style={{ width: 90 }}
-                />
+
+              <div className="task-info">
+                Оценка: {t.estimateHours}ч • Запланировано: {planned}ч • Осталось: {remaining}ч
+              </div>
+
+              <div className="task-controls">
+                <label>
+                  Оценка, ч:&nbsp;
+                  <input
+                    type="number"
+                    step={0.25}
+                    min={0}
+                    value={t.estimateHours}
+                    onChange={(e) => onEstimateChange(t.id, Math.max(0, Number(e.target.value)))}
+                  />
+                </label>
               </div>
             </div>
           );
