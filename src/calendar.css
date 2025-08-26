@@ -49,3 +49,40 @@
     align-items: center;
     height: 100%;
 }
+
+/* --- Шаг 5: Стилизация событий --- */
+/* Убираем отступ слева и делаем события уже */
+.fc-timegrid-event-harness {
+  left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Настройки для самого события */
+.fc-event {
+  width: calc(100% - 5px); /* Сохраняем отступ справа */
+  border-radius: 8px;
+}
+
+/* === Шаг 6: Изменение высоты строк и заголовков === */
+
+/* Уменьшаем высоту строк в два раза */
+.fc-timegrid-slot {
+  height: 1.5em !important;
+}
+
+/* Увеличиваем высоту заголовков дней */
+.fc-col-header-cell-cush {
+    padding: 1.5em !important;
+}
+
+/* === Шаг 6: Изменение высоты строк и заголовков === */
+
+/* Уменьшаем высоту строк в два раза */
+.fc-timegrid-slot {
+  height: 1.5em !important;
+}
+
+/* Увеличиваем высоту заголовков дней */
+.fc-col-header-cell-cush {
+    padding: 1.5em !important;
+}

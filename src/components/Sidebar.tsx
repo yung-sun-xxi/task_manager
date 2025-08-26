@@ -49,7 +49,26 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
       <div className="task-list" ref={listRef}>
         {items.map((t) => {
           const planned = allocations[t.id] || 0;
-          const remaining = Math.max(0, (t.estimateHours || 0) - planned);
+          const ratio = planned / t.estimateHours;
+
+          let barColor = "#2FBF71"; // Зеленый по умолчанию
+          if (t.estimateHours > 0) {
+            if (ratio <= 1.0) {
+              barColor = "#2FBF71"; // Зеленый
+            } else if (ratio <= 1.5) {
+              barColor = "#F9A03F"; // Желтый
+            } else if (ratio <= 2.0) {
+              barColor = "#D45113"; // Оранжевый
+            } else if (ratio <= 3.0) {
+              barColor = "#EB3333"; // Красный
+            } else {
+              barColor = "#820D0D"; // Бордовый
+            }
+          }
+
+          // Ограничиваем длину заголовка
+          const truncatedTitle = t.title.length > 70 ? t.title.slice(0, 67) + "..." : t.title;
+
           return (
             <div
               key={t.id}
@@ -60,25 +79,24 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
               draggable
             >
               <div className="task-header">
-                <div className="task-title">{t.title}</div>
+                <div className="task-title">{truncatedTitle}</div>
                 {t.description ? <div className="task-desc">{t.description}</div> : null}
               </div>
 
-              <div className="task-info">
-                Estimate: {t.estimateHours}h • Planned: {planned}h • Remaining: {remaining}h
-              </div>
-
-              <div className="task-controls">
-                <label>
-                  Estimate, h:&nbsp;
-                  <input
-                    type="number"
-                    step={0.25}
-                    min={0}
-                    value={t.estimateHours}
-                    onChange={(e) => onEstimateChange(t.id, Math.max(0, Number(e.target.value)))}
-                  />
-                </label>
+              {/* Новый контейнер для барчарта и метки */}
+              <div className="task-bar-row">
+                <div className="task-bar-container">
+                  <div
+                    className="task-bar-fill"
+                    style={{
+                      width: `${Math.min(100, ratio * 100)}%`,
+                      backgroundColor: barColor,
+                    }}
+                  ></div>
+                </div>
+                <div className="task-bar-label">
+                  {planned} / {t.estimateHours} hr
+                </div>
               </div>
             </div>
           );
