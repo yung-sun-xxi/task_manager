@@ -119,7 +119,7 @@ const CalendarView: React.FC<Props> = (props) => {
         snapDuration="00:15:00"
         selectable={true}
         selectMirror={true}
-        nowIndicator={true}
+        nowIndicator={false}
         droppable={true}
         editable={true}
         eventResizableFromStart={true}

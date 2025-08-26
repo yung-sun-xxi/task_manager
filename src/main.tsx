@@ -10,8 +10,8 @@ import { Notifications } from '@mantine/notifications';
 
 /* Your project styles (as before) */
 import './index.css';
-import './google_calendar_theme.css';
-import './hourly_lines_15m.css';
+import './modal_fix.css';
+import './calendar.css'; // Добавлен новый файл стилей
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

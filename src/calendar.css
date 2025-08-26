@@ -1,0 +1,51 @@
+/* src/calendar.css */
+
+/* === Шаг 1: Сброс всех границ === */
+/* Мы сбрасываем ВСЕ стандартные границы в календаре, чтобы начать с чистого листа. */
+.fc-theme-standard table,
+.fc-theme-standard thead,
+.fc-theme-standard tbody,
+.fc-theme-standard tr,
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border: 0 !important;
+}
+
+/* === Шаг 2: Базовые цвета и фон === */
+:root {
+  --line-color: #ccc;
+  --bg-color: #ffffff;
+}
+
+.fc, .fc .fc-view-harness, .fc .fc-scrollgrid {
+  background: var(--bg-color);
+}
+
+/* --- Шаг 3: Вертикальные линии --- */
+/* Создаем вертикальные линии, добавляя левую границу к колонкам дней */
+.fc .fc-timegrid-col,
+.fc-col-header-cell {
+  border-left: 1px solid var(--line-color) !important;
+}
+
+/* Убираем лишнюю границу у первой колонки */
+.fc .fc-timegrid-col:first-of-type,
+.fc-col-header-cell:first-of-type {
+    border-left: none !important;
+}
+
+/* --- Шаг 4: Горизонтальные линии и выравнивание времени --- */
+
+/* Добавляем верхнюю границу для всех слотов, начинающихся в :00 */
+/* Это обеспечивает идеальное совпадение с границами событий */
+.fc .fc-timegrid-slots .fc-timegrid-slot[data-time$=":00:00"],
+.fc .fc-timegrid-axis .fc-timegrid-slot[data-time$=":00:00"] {
+  border-top: 1px solid var(--line-color) !important;
+}
+
+/* Используем Flexbox для выравнивания текста времени по центру */
+.fc .fc-timegrid-axis .fc-timegrid-slot-label {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
