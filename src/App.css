@@ -8,14 +8,32 @@
 }
 
 .sidebar {
+  /* Убираем фиксированную ширину и заменяем ее на динамическую */
   width: 288px;
-  min-width: 288px;
-  flex: 0 0 288px;
+  min-width: 300px; /* Устанавливаем минимальную ширину сайдбара */
+  max-width: 500px; /* Ограничиваем максимальную ширину */
+  flex: 0 0 auto;
   height: 100%;
   border-right: 1px solid rgba(0,0,0,0.08);
   background: #fafafa;
   overflow: hidden auto;
+  position: relative;
+  padding: 0 15px 0 10px;
 }
+
+/* Стилизация ползунка */
+.sidebar-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background: #e2e8f0;
+  border-right: 1px solid #94a3b8;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
 
 .main {
   flex: 1 1 auto;
@@ -31,7 +49,7 @@
 
 /* ---- Sidebar ---- */
 .sidebar-inner {
-  padding: 12px;
+  padding: 0;
 }
 
 .sidebar-title {
@@ -63,12 +81,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .task-title {
   font-weight: 600;
   line-height: 1.35;
+  overflow-wrap: break-word;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .task-hours {
@@ -144,6 +165,16 @@
   resize: vertical;
 }
 
+/* Новый класс для компактного поля ввода */
+.tm-input-small {
+  width: 80px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  outline: none;
+  font-size: 14px;
+}
+
 .tm-modal-actions {
   margin-top: 14px;
   display: flex;
@@ -192,3 +223,46 @@
   background: #fff;
 }
 .tm-btn-danger:hover { background: #fee2e2; }
+
+/* Убираем стрелки в полях ввода типа number */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ---- Task Bar Chart ---- */
+.task-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px; /* Увеличиваем расстояние между баром и цифрами */
+}
+
+.task-bar-container {
+  flex-grow: 1; /* Позволяем бару растягиваться */
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.task-bar-fill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s ease-in-out;
+}
+
+.task-bar-label {
+  font-size: 12px;
+  color: #475569;
+  text-align: right;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
