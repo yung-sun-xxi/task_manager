@@ -32,6 +32,14 @@ function genId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Теперь эта функция не нужна, так как мы используем maxLength
+function truncateTitle(title: string): string {
+  if (title.length > 50) {
+    return title.slice(0, 47) + "...";
+  }
+  return title;
+}
+
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [events, setEvents] = useState<PlainEvent[]>(() => loadEvents());
@@ -45,6 +53,9 @@ const App: React.FC = () => {
 
   // force refresh calendar after destructive ops
   const [calReset, setCalReset] = useState(0);
+
+  // sidebar resize state
+  const [sidebarWidth, setSidebarWidth] = useState(288);
 
   // persist
   useEffect(() => saveTasks(tasks), [tasks]);
@@ -60,6 +71,36 @@ const App: React.FC = () => {
       setDraftEstimate(t.estimateHours || 0);
     }
   }, [isTaskModalOpen, editingTaskId, tasks]);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isTaskModalOpen) {
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isTaskModalOpen]);
+
+
+  // sidebar resize handlers
+  const handleMouseDown = useCallback(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    setSidebarWidth(e.clientX);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+  }, [handleMouseMove]);
+
 
   // allocations
   const allocations: Record<string, number> = useMemo(() => {
@@ -90,7 +131,12 @@ const App: React.FC = () => {
     // Create a new task and event linked to it
     const taskId = genId("task");
     const est = Math.max(0.25, (end.getTime() - start.getTime()) / 36e5);
-    const newTask: Task = { id: taskId, title: "New Task", description: "", estimateHours: Math.round(est * 4) / 4 };
+    const newTask: Task = { 
+      id: taskId, 
+      title: "New Task", 
+      description: "", 
+      estimateHours: Math.round(est * 4) / 4 
+    };
     const newEvent: PlainEvent = {
       id: genId("ev"),
       title: newTask.title,
@@ -127,13 +173,13 @@ const App: React.FC = () => {
 
     // update task
     const nextTasks = tasks.map(t =>
-      t.id === editingTaskId ? { ...t, title, description: draftDescription, estimateHours: estimate } : t
+      t.id === editingTaskId ? { ...t, title: title, description: draftDescription, estimateHours: estimate } : t
     );
     setTasks(nextTasks);
     saveTasks(nextTasks);
 
     // sync events titles
-    const nextEvents = events.map(ev => ((ev as any).taskId === editingTaskId ? { ...ev, title } as PlainEvent : ev));
+    const nextEvents = events.map(ev => ((ev as any).taskId === editingTaskId ? { ...ev, title: title } as PlainEvent : ev));
     setEvents(nextEvents);
     saveEvents(nextEvents);
 
@@ -162,13 +208,14 @@ const App: React.FC = () => {
 
   return (
     <div className="app-shell">
-      <div className="sidebar">
+      <div className="sidebar" style={{ width: sidebarWidth }}>
         <Sidebar
           tasks={tasks}
           allocations={allocations}
           onEstimateChange={onEstimateChange}
           onTaskDblClick={handleEventDblClick}
         />
+        <div className="sidebar-resizer" onMouseDown={handleMouseDown}></div>
       </div>
 
       <div className="main">
@@ -207,6 +254,7 @@ const App: React.FC = () => {
                   saveModal();
                 }
               }}
+              maxLength={70}
             />
 
             <label className="tm-label" htmlFor="tm-task-desc">Description</label>

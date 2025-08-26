@@ -119,7 +119,7 @@ const CalendarView: React.FC<Props> = (props) => {
         snapDuration="00:15:00"
         selectable={true}
         selectMirror={true}
-        nowIndicator={false}
+        nowIndicator={true}
         droppable={true}
         editable={true}
         eventResizableFromStart={true}
@@ -157,7 +157,7 @@ const CalendarView: React.FC<Props> = (props) => {
         eventRemove={handleEventRemove}
         eventReceive={handleEventReceive}
         eventDidMount={eventDidMount}
-        height="auto"
+        height="100%"
       />
     </div>
   );
