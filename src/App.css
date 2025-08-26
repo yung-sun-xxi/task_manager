@@ -266,3 +266,21 @@ input[type="number"] {
   margin-bottom: 0;
   white-space: nowrap;
 }
+
+/* Sidebar header with add button */
+.sidebar-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.tm-btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 20px;
+  line-height: 1;
+}

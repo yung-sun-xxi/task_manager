@@ -15,9 +15,10 @@ type Props = {
   allocations: Record<string, number>;
   onEstimateChange: (taskId: string, estimate: number) => void;
   onTaskDblClick?: (taskId: string) => void;
+  onAddTask?: () => void;
 };
 
-const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick }) => {
+const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick, onAddTask }) => {
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // Provide items (could sort later)
@@ -45,7 +46,12 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
 
   return (
     <div className="tm-sidebar">
-      <h3 className="sidebar-title">Tasks</h3>
+      <div className="sidebar-title-row">
+        <h3 className="sidebar-title">Tasks</h3>
+        <button type="button" className="tm-btn tm-btn-primary tm-btn-icon" onClick={onAddTask} title="Add task">
+          +
+        </button>
+      </div>
       <div className="task-list" ref={listRef}>
         {items.map((t) => {
           const planned = allocations[t.id] || 0;

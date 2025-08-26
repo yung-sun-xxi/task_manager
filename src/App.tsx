@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
   const [draftEstimate, setDraftEstimate] = useState(0);
+  const [pendingNewTaskId, setPendingNewTaskId] = useState<string | null>(null);
 
   // force refresh calendar after destructive ops
   const [calReset, setCalReset] = useState(0);
@@ -159,16 +160,43 @@ const App: React.FC = () => {
     setTaskModalOpen(true);
   }, [tasks]);
 
+  const openNewTaskModal = useCallback(() => {
+    // Create a placeholder task and open the same modal for editing
+    const id = genId('task');
+    const newTask = { id, title: "", description: "", estimateHours: 0 } as Task;
+    setTasks(prev => [newTask, ...prev]);
+    setEditingTaskId(id);
+    setDraftTitle("");
+    setDraftDescription("");
+    setDraftEstimate(0);
+    setPendingNewTaskId(id);
+    setTaskModalOpen(true);
+  }, []);
+
   // modal actions
   const closeModal = useCallback(() => {
+    // If we created a new empty task and the user cancelled, remove it
+    if (pendingNewTaskId && editingTaskId === pendingNewTaskId) {
+      setTasks(prev => prev.filter(t => t.id !== pendingNewTaskId));
+      setPendingNewTaskId(null);
+    }
     setTaskModalOpen(false);
     setEditingTaskId(null);
-  }, []);
+  }, [pendingNewTaskId, editingTaskId]);
 
   const saveModal = useCallback(() => {
     if (!editingTaskId) return;
     const title = draftTitle.trim();
-    if (!title) return;
+    if (!title) {
+        // Remove the pending task if the title is empty and the user tries to save
+        if (pendingNewTaskId === editingTaskId) {
+            setTasks(prev => prev.filter(t => t.id !== pendingNewTaskId));
+            setPendingNewTaskId(null);
+        }
+        closeModal();
+        return;
+    }
+
     const estimate = Math.max(0, Math.round(Number(draftEstimate) * 4) / 4);
 
     // update task
@@ -181,10 +209,11 @@ const App: React.FC = () => {
     // sync events titles
     const nextEvents = events.map(ev => ((ev as any).taskId === editingTaskId ? { ...ev, title: title } as PlainEvent : ev));
     setEvents(nextEvents);
+    if (pendingNewTaskId === editingTaskId) setPendingNewTaskId(null);
     saveEvents(nextEvents);
 
     closeModal();
-  }, [editingTaskId, draftTitle, draftDescription, draftEstimate, tasks, events, closeModal]);
+  }, [editingTaskId, draftTitle, draftDescription, draftEstimate, tasks, events, closeModal, pendingNewTaskId]);
 
   const deleteTask = useCallback((e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -200,6 +229,7 @@ const App: React.FC = () => {
     // remove related events
     const nextEvents = events.filter(ev => (ev as any).taskId !== id);
     setEvents(nextEvents);
+    if (pendingNewTaskId === editingTaskId) setPendingNewTaskId(null);
     saveEvents(nextEvents);
 
     setCalReset(n => n + 1);
@@ -210,6 +240,7 @@ const App: React.FC = () => {
     <div className="app-shell">
       <div className="sidebar" style={{ width: sidebarWidth }}>
         <Sidebar
+          onAddTask={openNewTaskModal}
           tasks={tasks}
           allocations={allocations}
           onEstimateChange={onEstimateChange}
