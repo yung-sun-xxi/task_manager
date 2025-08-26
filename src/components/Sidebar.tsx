@@ -49,7 +49,19 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
       <div className="task-list" ref={listRef}>
         {items.map((t) => {
           const planned = allocations[t.id] || 0;
-          const remaining = Math.max(0, (t.estimateHours || 0) - planned);
+          const ratio = planned / t.estimateHours;
+          
+          let barColor = "#22c55e"; // Зеленый по умолчанию
+          if (t.estimateHours > 0) {
+            if (ratio > 1) {
+              const ratioClamped = Math.min(2, ratio); // Ограничиваем до 200%
+              const hue = 60 - (ratioClamped - 1) * 60; // От 60 (желтый) до 0 (красный)
+              barColor = `hsl(${hue}, 80%, 60%)`;
+            } else {
+              barColor = "#22c55e"; // Зеленый
+            }
+          }
+
           return (
             <div
               key={t.id}
@@ -64,21 +76,18 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
                 {t.description ? <div className="task-desc">{t.description}</div> : null}
               </div>
 
-              <div className="task-info">
-                Estimate: {t.estimateHours}h • Planned: {planned}h • Remaining: {remaining}h
+              {/* Обновленный барчарт с динамическим цветом */}
+              <div className="task-bar-container">
+                <div
+                  className="task-bar-fill"
+                  style={{
+                    width: `${Math.min(100, ratio * 100)}%`,
+                    backgroundColor: barColor,
+                  }}
+                ></div>
               </div>
-
-              <div className="task-controls">
-                <label>
-                  Estimate, h:&nbsp;
-                  <input
-                    type="number"
-                    step={0.25}
-                    min={0}
-                    value={t.estimateHours}
-                    onChange={(e) => onEstimateChange(t.id, Math.max(0, Number(e.target.value)))}
-                  />
-                </label>
+              <div className="task-bar-label">
+                {planned} / {t.estimateHours} hr
               </div>
             </div>
           );

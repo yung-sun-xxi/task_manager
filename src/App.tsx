@@ -218,21 +218,16 @@ const App: React.FC = () => {
               rows={4}
             />
 
-            <div className="tm-row" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <label className="tm-label" htmlFor="tm-task-est">Estimate, h</label>
-              <input
-                id="tm-task-est"
-                className="tm-input"
-                type="number"
-                step={0.25}
-                min={0}
-                value={draftEstimate}
-                onChange={(e) => setDraftEstimate(Number(e.target.value))}
-              />
-              <span style={{ marginLeft: "auto", opacity: 0.7 }}>
-                Planned: {allocations[editingTaskId || ""] || 0} h
-              </span>
-            </div>
+            <label className="tm-label" htmlFor="tm-task-est">Estimation, h</label>
+            <input
+              id="tm-task-est"
+              className="tm-input-small"
+              type="number"
+              step={0.25}
+              min={0}
+              value={draftEstimate}
+              onChange={(e) => setDraftEstimate(Number(e.target.value))}
+            />
 
             <div className="tm-modal-actions">
               <button

@@ -144,6 +144,16 @@
   resize: vertical;
 }
 
+/* Новый класс для компактного поля ввода */
+.tm-input-small {
+  width: 80px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  outline: none;
+  font-size: 14px;
+}
+
 .tm-modal-actions {
   margin-top: 14px;
   display: flex;
@@ -192,3 +202,38 @@
   background: #fff;
 }
 .tm-btn-danger:hover { background: #fee2e2; }
+
+/* Убираем стрелки в полях ввода типа number */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ---- Task Bar Chart ---- */
+.task-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.task-bar-fill {
+  height: 100%;
+  background: #3b82f6;
+  transition: width 0.3s ease-in-out;
+}
+
+.task-bar-label {
+  font-size: 12px;
+  color: #475569;
+  text-align: right;
+  margin-bottom: 8px;
+}
