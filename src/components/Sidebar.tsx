@@ -57,23 +57,23 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
       <div className="task-list" ref={listRef}>
         {items.map((t) => {
           const planned = allocations[t.id] || 0;
-          const ratio = planned / t.estimateHours;
+          const ratio = t.estimateHours > 0 ? planned / t.estimateHours : 0;
 
-          let barColor = "var(--color-status-green)";
+          let barColor = "#2FBF71"; // Default Green
           if (t.estimateHours > 0) {
             if (ratio <= 1.0) {
-              barColor = "var(--color-status-green)";
+              barColor = "#2FBF71"; // Green
             } else if (ratio <= 1.5) {
-              barColor = "var(--color-status-yellow)";
+              barColor = "#F9A03F"; // Yellow
             } else if (ratio <= 2.0) {
-              barColor = "var(--color-status-orange)";
+              barColor = "#D45113"; // Orange
             } else if (ratio <= 3.0) {
-              barColor = "var(--color-status-red)";
+              barColor = "#EB3333"; // Red
             } else {
-              barColor = "var(--color-status-maroon)";
+              barColor = "#820D0D"; // Maroon
             }
           }
-
+          
           const eventColor = `var(--color-task-card-bg)`;
           const truncatedTitle = t.title.length > 70 ? t.title.slice(0, 67) + "..." : t.title;
 
@@ -92,6 +92,7 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
                 {t.description ? <div className="task-desc">{t.description}</div> : null}
               </div>
 
+              {/* Новый контейнер для барчарта и метки */}
               <div className="task-bar-row">
                 <div className="task-bar-container">
                   <div

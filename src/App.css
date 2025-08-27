@@ -255,7 +255,7 @@ input[type="number"] {
 
 .task-bar-fill {
   height: 100%;
-  background: var(--color-primary);
+  background: none; /* Изменено, чтобы динамический цвет работал */
   transition: width 0.3s ease-in-out;
 }
 
