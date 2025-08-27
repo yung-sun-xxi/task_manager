@@ -95,10 +95,11 @@ dialog,
 }
 
 /* Inputs/selects inside dialogs should be solid */
+.tm-modal input, .tm-modal select, .tm-modal textarea,
 div[role="dialog"] input, div[role="dialog"] select, div[role="dialog"] textarea,
 [aria-modal="true"] input, [aria-modal="true"] select, [aria-modal="true"] textarea,
 dialog input, dialog select, dialog textarea{
-  background: var(--surface) !important;
+  background: var(--color-modal-input-bg) !important;
   color: var(--tm-modal-text) !important;
   border: 1px solid var(--border) !important;
   border-radius: 10px !important;

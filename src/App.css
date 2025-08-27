@@ -26,12 +26,15 @@
   top: 0;
   height: 100%;
   width: 5px;
-  background: var(--color-border);
-  border-right: 1px solid var(--color-muted);
+  background: var(--color-sidebar-resizer-bg);
+  border-right: none;
   cursor: ew-resize;
   z-index: 10;
 }
 
+.sidebar-resizer:hover {
+  background: var(--color-sidebar-resizer-hover-bg);
+}
 
 .main {
   flex: 1 1 auto;
@@ -159,7 +162,7 @@
 .tm-input:focus,
 .tm-textarea:focus {
   border-color: var(--color-modal-input-focus-border) !important;
-  box-shadow: 0 0 0 3px rgba(190, 62, 130, 0.15) !important;
+  box-shadow: 0 0 0 3px var(--color-modal-input-focus-shadow) !important;
 }
 
 .tm-textarea {
@@ -205,24 +208,26 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 10px;
-  border: 1px solid var(--color-border) !important;
-  color: var(--color-text) !important;
+  border: 1px solid var(--color-button-cancel-border) !important;
+  background: var(--color-button-cancel-bg) !important;
+  color: var(--color-button-cancel-text) !important;
   font-weight: 500;
   user-select: none;
 }
 
-.tm-btn:hover { background: var(--color-bg) !important; }
+.tm-btn:hover { background: var(--hover-secondary-bg) !important; }
 .tm-btn-primary {
   border-color: var(--color-button-save-border) !important;
   background: var(--color-button-save-bg) !important;
   color: var(--color-button-save-text) !important;
 }
-.tm-btn-primary:hover { background: var(--color-accent) !important; }
+.tm-btn-primary:hover { background: var(--hover-primary-bg) !important; }
 .tm-btn-danger {
   border-color: var(--color-button-delete-border) !important;
+  background: var(--color-button-delete-bg) !important;
   color: var(--color-button-delete-text) !important;
 }
-.tm-btn-danger:hover { background: #fdf5f5 !important; }
+.tm-btn-danger:hover { background: var(--hover-secondary-bg) !important; }
 
 /* Remove arrows from number input fields */
 input[type="number"]::-webkit-outer-spin-button,
@@ -255,7 +260,7 @@ input[type="number"] {
 
 .task-bar-fill {
   height: 100%;
-  background: none; /* Изменено, чтобы динамический цвет работал */
+  background: none;
   transition: width 0.3s ease-in-out;
 }
 
