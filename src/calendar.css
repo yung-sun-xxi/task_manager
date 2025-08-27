@@ -13,11 +13,10 @@
 /* === Шаг 2: Базовые цвета и фон === */
 :root {
   --line-color: var(--color-border);
-  --bg-color: var(--color-surface);
 }
 
 .fc, .fc .fc-view-harness, .fc .fc-scrollgrid {
-  background: var(--bg-color) !important;
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
 }
 
@@ -74,7 +73,6 @@
 }
 
 .fc-button {
-  background-color: var(--color-surface) !important;
   border-color: var(--color-border) !important;
   color: var(--color-text) !important;
 }

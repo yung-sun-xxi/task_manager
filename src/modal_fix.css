@@ -11,11 +11,11 @@
 
   /* Modal specifics */
   --tm-modal-overlay: rgba(2, 6, 23, 0.45);
-  --tm-modal-bg: var(--surface);
+  --tm-modal-bg: var(--color-surface);
   --tm-modal-text: var(--text);
   --tm-modal-radius: 16px;
   --tm-modal-shadow: 0 24px 56px rgba(2, 6, 23, 0.22), 0 8px 20px rgba(2, 6, 23, 0.12);
-  --tm-modal-border: 1px solid var(--border);
+  --tm-modal-border: 1px solid var(--color-border);
 }
 
 /* 2) Backdrop/overlay */
@@ -106,10 +106,5 @@ dialog input, dialog select, dialog textarea{
 div[role="dialog"] [style*="background: rgba"],
 [aria-modal="true"] [style*="background: rgba"],
 dialog [style*="background: rgba"]{
-  background: var(--tm-modal-bg) !important;
-}
-
-/* Safety: calendars stay opaque too */
-.fc, .fc .fc-view-harness, .fc .fc-scrollgrid{
   background: var(--tm-modal-bg) !important;
 }
