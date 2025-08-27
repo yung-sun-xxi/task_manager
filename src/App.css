@@ -285,7 +285,7 @@ input[type="number"] {
   width: 36px;               /* was 32px */
   height: 36px;              /* was 32px */
   padding: 0;
-  border-radius: 8px;        /* unify with events/buttons */
+  border-radius: 10px;
   font-size: 20px;
   line-height: 1;
 }
@@ -296,8 +296,9 @@ input[type="number"] {
   top: 12px;
   right: 12px;
   z-index: 110;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 0 12px;
+  height: 36px;              /* unify height with toolbar buttons */
+  border-radius: 8px;        /* same radius as events */
   border: 1px solid var(--color-sidebar-button-border);
   background: var(--color-sidebar-button-bg);
   color: var(--color-sidebar-button-text);
@@ -305,9 +306,46 @@ input[type="number"] {
   font-size: 14px;
   line-height: 1;
   user-select: none;
-  height: 36px;              /* <- unify height */
 }
-
 .theme-toggle-btn:hover {
   background: var(--hover-primary-bg);
+}
+
+/* ---- Theme chooser menu (appears on long press) ---- */
+.theme-menu {
+  position: fixed;
+  top: 54px;                 /* 12(top) + 36(height) + 6(gap) */
+  right: 12px;
+  z-index: 111;
+  background: var(--color-task-card-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-task-card-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px var(--mulberry-16);
+  padding: 6px;
+  min-width: 160px;
+}
+
+.theme-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.theme-menu-item:hover {
+  background: var(--hover-secondary-bg);
+}
+.theme-menu-item.is-active {
+  outline: 2px solid var(--color-calendar-nav-button-border);
+}
+
+/* visual highlight while dragging over an item */
+.theme-menu-item.is-hover {
+  background: var(--hover-secondary-bg);
 }

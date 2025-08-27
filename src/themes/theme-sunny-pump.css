@@ -1,0 +1,109 @@
+/* src/themes/theme-sunny-pump.css */
+
+/*
+* Sunny Pump Theme — all green vibe
+* Based on your structure; keeps variable names for compatibility.
+*/
+
+html.theme-sunny-pump {
+    /* ------------------------------------ */
+    /* 0. Core Palette                      */
+    /* ------------------------------------ */
+    --pale-dogwood: #DDEED6;   /* soft sage background */
+    --bright-pink:  #66B37A;   /* primary green */
+    --cerise:       #2F9E44;   /* accent / stronger green */
+    --mulberry:     #1B7A3A;   /* secondary / hover green */
+    --eggplant:     #0F2A1C;   /* deep pine (borders/labels) */
+    --white:        #FFFFFF;
+    --black:        #000000;
+
+    /* Derived tints & alphas */
+    --eggplant-80: rgba(15, 42, 28, 0.80);
+    --eggplant-60: rgba(15, 42, 28, 0.60);
+    --eggplant-12: rgba(15, 42, 28, 0.12);
+    --pink-12:     rgba(102, 179, 122, 0.12);  /* primary green, soft overlay */
+    --pink-20:     rgba(102, 179, 122, 0.20);
+    --mulberry-16: rgba(27, 122, 58, 0.16);    /* secondary green shadow */
+    --cerise-16:   rgba(47, 158, 68, 0.16);    /* accent green focus ring */
+
+    /* ------------------------------------ */
+    /* 1. General App Colors                */
+    /* ------------------------------------ */
+    --color-bg-app: #E3F2E7;             /* light mint for contrast */
+    --color-text-primary: var(--black);  /* main text */
+    --color-text-muted: var(--eggplant-80); /* secondary/muted text */
+    --color-primary: var(--bright-pink); /* brand/accent elements */
+
+    /* ------------------------------------ */
+    /* 2. Sidebar Elements                  */
+    /* ------------------------------------ */
+    --color-sidebar-bg: #E3F2E7;                   /* sidebar background */
+    --color-task-card-bg: var(--white);            /* task cards background */
+    --color-task-card-border: var(--eggplant-12);  /* subtle border */
+    --color-task-card-shadow: 0 4px 14px var(--mulberry-16);
+
+    --color-sidebar-button-bg: var(--bright-pink); /* primary button */
+    --color-sidebar-button-text: var(--black);     /* readable text */
+    --color-sidebar-button-border: transparent;
+
+    --color-task-title: var(--black);
+    --color-task-hours-text: var(--black);
+    --color-task-hours-bg: #CFEAD9;                /* light green label bg */
+    --color-task-bar-label: var(--black);
+    --color-sidebar-title: var(--black);
+
+    --color-sidebar-resizer-bg: var(--eggplant-12);      /* sidebar resizer background */
+    --color-sidebar-resizer-hover-bg: var(--mulberry);   /* sidebar resizer hover */
+
+    /* Dynamic bar chart colors */
+    --color-status-green:  #2E7D32;
+    --color-status-yellow: #A2C837;  /* greenish yellow for harmony */
+    --color-status-orange: #6FBF5E;  /* soft lime/orange analog */
+    --color-status-red:    #1E8E3E;  /* darker green instead of red */
+    --color-status-maroon: #14532D;  /* deep green (maroon analog) */
+
+    /* ------------------------------------ */
+    /* 3. Calendar Elements                 */
+    /* ------------------------------------ */
+    --color-calendar-bg: transparent;              /* transparent calendar bg */
+    --color-calendar-lines: var(--eggplant-12);    /* grid lines */
+    --color-calendar-text: var(--black);
+    --color-calendar-today-bg: var(--pink-12);     /* highlight today (green tint) */
+    --color-calendar-nav-button-bg: var(--white);
+    --color-calendar-nav-button-text: var(--black);
+    --color-calendar-nav-button-border: var(--eggplant-12);
+    --color-calendar-today-button-bg: var(--bright-pink);
+    --color-calendar-today-button-text: var(--black);
+    --color-calendar-today-button-border: transparent;
+    --color-event-border: transparent;             /* no event borders */
+    --color-event-text: var(--black);
+
+    /* ------------------------------------ */
+    /* 4. Modal Window Elements             */
+    /* ------------------------------------ */
+    --color-modal-bg: var(--pale-dogwood);             /* modal background */
+    --color-modal-text: var(--black);                  /* modal text */
+    --color-modal-input-bg: var(--white);              /* input background */
+    --color-modal-input-border: var(--eggplant-12);    /* input border */
+    --color-modal-input-focus-border: var(--mulberry); /* focus border */
+    --color-modal-input-focus-shadow: 0 0 0 3px var(--cerise-16);
+
+    /* --- "Delete task" Button --- */
+    --color-button-delete-text: var(--black);
+    --color-button-delete-bg: var(--cerise);
+    --color-button-delete-border: transparent;
+
+    /* --- "Cancel" Button --- */
+    --color-button-cancel-text: var(--black);
+    --color-button-cancel-bg: var(--white);
+    --color-button-cancel-border: var(--eggplant-12);
+
+    /* --- "Save" Button --- */
+    --color-button-save-text: var(--black);
+    --color-button-save-bg: var(--bright-pink);
+    --color-button-save-border: transparent;
+
+    /* Optional hover states */
+    --hover-primary-bg: #79C796;   /* hover for primary buttons */
+    --hover-secondary-bg: #4EAF6C; /* hover for secondary elements */
+}
