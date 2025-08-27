@@ -9,56 +9,58 @@
     /* ------------------------------------ */
     /* 1. General App Colors                */
     /* ------------------------------------ */
-    --color-bg-app: #FF0000; /* Bright red */
-    --color-text-primary: #5E4352;
-    --color-text-muted: #8a7a85;
+    --color-bg-app: #FF0000;
+    --color-text-primary: #FF0000;
+    --color-text-muted: #FF0000;
+    --color-primary: #FF0000;
 
     /* ------------------------------------ */
     /* 2. Sidebar Elements                  */
     /* ------------------------------------ */
-    --color-sidebar-bg: #FFFF00; /* Bright yellow */
-    --color-task-card-bg: #00FF00; /* Bright green */
-    --color-task-card-border: #FF00FF; /* Bright magenta */
-    --color-task-card-shadow: #000000;
-    --color-sidebar-button-bg: #800080; /* Purple */
-    --color-sidebar-button-text: #FFFFFF;
-    --color-sidebar-button-border: #800080;
+    --color-sidebar-bg: #FF0000;
+    --color-task-card-bg: #FF0000;
+    --color-task-card-border: #FF0000;
+    --color-task-card-shadow: #FF0000;
+    --color-sidebar-button-bg: #FF0000;
+    --color-sidebar-button-text: #FF0000;
+    --color-sidebar-button-border: #FF0000;
 
     /* ------------------------------------ */
     /* 3. Calendar Elements                 */
     /* ------------------------------------ */
-    --color-calendar-bg: #008080; /* Teal */
-    --color-calendar-lines: #FF4500; /* Orange-red */
-    --color-calendar-text: #0000FF; /* Bright blue */
-    --color-calendar-today-bg: rgba(255, 140, 0, 0.5); /* Semi-transparent dark orange */
-    --color-calendar-nav-button-bg: #FFFF00; /* Bright yellow */
-    --color-calendar-nav-button-text: #0000FF; /* Bright blue */
-    --color-calendar-nav-button-border: #FF00FF; /* Bright magenta */
-    --color-calendar-today-button-bg: #800080; /* Purple */
-    --color-calendar-today-button-text: #ffffff;
-    --color-calendar-today-button-border: #800080;
-
+    --color-calendar-bg: #FF0000;
+    --color-calendar-lines: #FF0000;
+    --color-calendar-text: #FF0000;
+    --color-calendar-today-bg: rgba(255, 0, 0, 0.5); /* Semi-transparent red */
+    --color-calendar-nav-button-bg: #FF0000;
+    --color-calendar-nav-button-text: #FF0000;
+    --color-calendar-nav-button-border: #FF0000;
+    --color-calendar-today-button-bg: #FF0000;
+    --color-calendar-today-button-text: #FF0000;
+    --color-calendar-today-button-border: #FF0000;
+    --color-event-border: #FF0000;
+    
     /* ------------------------------------ */
     /* 4. Modal Window Elements             */
     /* ------------------------------------ */
-    --color-modal-bg: #FF00FF; /* Bright magenta */
-    --color-modal-text: #0000FF; /* Bright blue */
-    --color-modal-input-border: #FF4500; /* Orange-red */
-    --color-modal-input-focus-border: #800080; /* Purple */
-    --color-modal-input-focus-shadow: #000000;
+    --color-modal-bg: #FF0000;
+    --color-modal-text: #FF0000;
+    --color-modal-input-border: #FF0000;
+    --color-modal-input-focus-border: #FF0000;
+    --color-modal-input-focus-shadow: #FF0000;
 
     /* --- "Delete task" Button --- */
-    --color-button-delete-text: #c94c4c;
-    --color-button-delete-bg: transparent;
-    --color-button-delete-border: #c94c4c;
+    --color-button-delete-text: #FF0000;
+    --color-button-delete-bg: #FF0000;
+    --color-button-delete-border: #FF0000;
 
     /* --- "Cancel" Button --- */
-    --color-button-cancel-text: #FFFF00; /* Bright yellow */
-    --color-button-cancel-bg: #00FF00; /* Bright green */
-    --color-button-cancel-border: #FF00FF; /* Bright magenta */
+    --color-button-cancel-text: #FF0000;
+    --color-button-cancel-bg: #FF0000;
+    --color-button-cancel-border: #FF0000;
 
     /* --- "Save" Button --- */
-    --color-button-save-text: #FFFFFF;
-    --color-button-save-bg: #800080; /* Purple */
-    --color-button-save-border: #800080;
+    --color-button-save-text: #FF0000;
+    --color-button-save-bg: #FF0000;
+    --color-button-save-border: #FF0000;
 }

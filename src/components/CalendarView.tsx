@@ -125,7 +125,6 @@ const CalendarView: React.FC<Props> = (props) => {
     if (title) arg.event.setProp("title", title);
     if (tColor) {
       (arg.event as any).setProp("backgroundColor", tColor);
-      (arg.event as any).setProp("borderColor", tColor);
     }
     pushAllEvents();
   }, [pushAllEvents]);

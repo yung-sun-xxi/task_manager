@@ -56,6 +56,7 @@
   background-color: var(--color-button-save-bg) !important;
   border-color: var(--color-button-save-border) !important;
   color: var(--color-button-save-text) !important;
+  box-shadow: 0 0 0 10px var(--color-event-border) inset !important;
 }
 
 /* === Step 6: Adjusting row and header height === */

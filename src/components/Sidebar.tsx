@@ -38,7 +38,6 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
           title,
           extendedProps: { taskId: id },
           backgroundColor: color,
-          borderColor: color,
         };
       },
     });

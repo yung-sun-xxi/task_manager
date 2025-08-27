@@ -144,8 +144,6 @@ const App: React.FC = () => {
       start: start.toISOString(),
       end: end.toISOString(),
       taskId,
-      backgroundColor: "var(--color-primary)",
-      borderColor: "var(--color-primary)",
     };
     setTasks(prev => [newTask, ...prev]);
     setEvents(prev => [...prev, newEvent]);
