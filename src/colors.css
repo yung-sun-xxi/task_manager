@@ -24,6 +24,11 @@
     --color-sidebar-button-bg: #FF0000;
     --color-sidebar-button-text: #FF0000;
     --color-sidebar-button-border: #FF0000;
+    --color-task-title: #FF0000;
+    --color-task-hours-text: #FF0000;
+    --color-task-hours-bg: #FF0000;
+    --color-task-bar-label: #FF0000;
+    --color-sidebar-title: #FF0000; /* New: Color for the "Tasks" title */
 
     /* ------------------------------------ */
     /* 3. Calendar Elements                 */
@@ -39,6 +44,7 @@
     --color-calendar-today-button-text: #FF0000;
     --color-calendar-today-button-border: #FF0000;
     --color-event-border: #FF0000;
+    --color-event-text: #FF0000;
     
     /* ------------------------------------ */
     /* 4. Modal Window Elements             */

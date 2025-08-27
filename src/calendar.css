@@ -54,10 +54,19 @@
   width: calc(100% - 5px) !important;
   border-radius: 8px !important;
   background-color: var(--color-button-save-bg) !important;
-  border-color: var(--color-button-save-border) !important;
-  color: var(--color-button-save-text) !important;
-  box-shadow: 0 0 0 10px var(--color-event-border) inset !important;
+  border-color: var(--color-event-border) !important;
+  color: var(--color-event-text) !important;
+  box-shadow: 0 0 0 1px var(--color-event-border) inset !important;
 }
+
+.fc-event-title {
+  color: var(--color-event-text) !important;
+}
+
+.fc-event-time {
+  color: var(--color-event-text) !important;
+}
+
 
 /* === Step 6: Adjusting row and header height === */
 .fc-timegrid-slot {

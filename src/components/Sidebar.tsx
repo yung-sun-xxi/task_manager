@@ -59,24 +59,22 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
           const planned = allocations[t.id] || 0;
           const ratio = planned / t.estimateHours;
 
-          let barColor = "var(--color-status-green)"; // Зеленый по умолчанию
+          let barColor = "var(--color-status-green)";
           if (t.estimateHours > 0) {
             if (ratio <= 1.0) {
-              barColor = "var(--color-status-green)"; // Зеленый
+              barColor = "var(--color-status-green)";
             } else if (ratio <= 1.5) {
-              barColor = "var(--color-status-yellow)"; // Желтый
+              barColor = "var(--color-status-yellow)";
             } else if (ratio <= 2.0) {
-              barColor = "var(--color-status-orange)"; // Оранжевый
+              barColor = "var(--color-status-orange)";
             } else if (ratio <= 3.0) {
-              barColor = "var(--color-status-red)"; // Красный
+              barColor = "var(--color-status-red)";
             } else {
-              barColor = "var(--color-status-maroon)"; // Бордовый
+              barColor = "var(--color-status-maroon)";
             }
           }
-          
-          const eventColor = `var(--color-primary)`;
 
-          // Ограничиваем длину заголовка
+          const eventColor = `var(--color-task-card-bg)`;
           const truncatedTitle = t.title.length > 70 ? t.title.slice(0, 67) + "..." : t.title;
 
           return (
@@ -90,11 +88,10 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
               draggable
             >
               <div className="task-header">
-                <div className="task-title">{truncatedTitle}</div>
+                <div className="task-title" style={{ color: "var(--color-task-title)" }}>{truncatedTitle}</div>
                 {t.description ? <div className="task-desc">{t.description}</div> : null}
               </div>
 
-              {/* Новый контейнер для барчарта и метки */}
               <div className="task-bar-row">
                 <div className="task-bar-container">
                   <div

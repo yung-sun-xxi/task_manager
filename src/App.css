@@ -53,7 +53,7 @@
   font-size: 18px;
   font-weight: 600;
   margin: 8px 0 12px;
-  color: var(--color-text);
+  color: var(--color-sidebar-title);
 }
 
 .task-list {
@@ -93,8 +93,8 @@
 
 .task-hours {
   font-variant-numeric: tabular-nums;
-  color: var(--color-muted);
-  background: rgba(94, 67, 82, 0.05);
+  color: var(--color-task-hours-text);
+  background: var(--color-task-hours-bg);
   border-radius: 8px;
   padding: 2px 6px;
   font-size: 12px;
@@ -106,6 +106,7 @@
   margin-bottom: 6px;
   white-space: pre-wrap;
 }
+
 
 .task-controls input[type="number"] {
   width: 90px;
@@ -260,7 +261,7 @@ input[type="number"] {
 
 .task-bar-label {
   font-size: 12px;
-  color: var(--color-muted);
+  color: var(--color-task-bar-label);
   text-align: right;
   margin-bottom: 0;
   white-space: nowrap;
