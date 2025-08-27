@@ -1,72 +1,98 @@
 /* src/colors.css */
 
 /*
-* This file centralizes all application color variables.
-* Change the values to customize the application's appearance.
+* Centralized application color variables.
+* Palette is based on: DFBBB1, F56476, E43F6F, BE3E82, 5E4352
 */
 
 :root {
     /* ------------------------------------ */
+    /* 0. Core Palette                      */
+    /* ------------------------------------ */
+    --pale-dogwood: #DFBBB1;   /* soft background */
+    --bright-pink:  #F56476;   /* primary brand */
+    --cerise:       #E43F6F;   /* accent / danger */
+    --mulberry:     #BE3E82;   /* secondary / hover */
+    --eggplant:     #5E4352;   /* original text, no longer used for text */
+    --white:        #FFFFFF;
+    --black:        #000000;
+
+    /* Derived tints & alphas */
+    --eggplant-80: rgba(94, 67, 82, 0.80);
+    --eggplant-60: rgba(94, 67, 82, 0.60);
+    --eggplant-12: rgba(94, 67, 82, 0.12);
+    --pink-12:     rgba(245, 100, 118, 0.12);
+    --pink-20:     rgba(245, 100, 118, 0.20);
+    --mulberry-16: rgba(190, 62, 130, 0.16);
+    --cerise-16:   rgba(228, 63, 111, 0.16);
+
+    /* ------------------------------------ */
     /* 1. General App Colors                */
     /* ------------------------------------ */
-    --color-bg-app: #FF0000;
-    --color-text-primary: #FF0000;
-    --color-text-muted: #FF0000;
-    --color-primary: #FF0000;
+    --color-bg-app: var(--pale-dogwood);
+    --color-text-primary: var(--black);
+    --color-text-muted: var(--black);
+    --color-primary: var(--bright-pink);
 
     /* ------------------------------------ */
     /* 2. Sidebar Elements                  */
     /* ------------------------------------ */
-    --color-sidebar-bg: #FF0000;
-    --color-task-card-bg: #FF0000;
-    --color-task-card-border: #FF0000;
-    --color-task-card-shadow: #FF0000;
-    --color-sidebar-button-bg: #FF0000;
-    --color-sidebar-button-text: #FF0000;
-    --color-sidebar-button-border: #FF0000;
-    --color-task-title: #FF0000;
-    --color-task-hours-text: #FF0000;
-    --color-task-hours-bg: #FF0000;
-    --color-task-bar-label: #FF0000;
-    --color-sidebar-title: #FF0000; /* New: Color for the "Tasks" title */
+    --color-sidebar-bg: #F6E3DF;
+    --color-task-card-bg: var(--white);
+    --color-task-card-border: var(--eggplant-12);
+    --color-task-card-shadow: 0 4px 14px var(--mulberry-16);
+    --color-sidebar-button-bg: var(--bright-pink);
+    --color-sidebar-button-text: var(--black);
+    --color-sidebar-button-border: transparent;
+    --color-task-title: var(--black);
+    --color-task-hours-text: var(--black);
+    --color-task-hours-bg: var(--mulberry);
+    --color-task-bar-label: var(--black);
+    --color-sidebar-title: var(--black);
 
     /* ------------------------------------ */
     /* 3. Calendar Elements                 */
     /* ------------------------------------ */
-    --color-calendar-bg: #FF0000;
-    --color-calendar-lines: #FF0000;
-    --color-calendar-text: #FF0000;
-    --color-calendar-today-bg: rgba(255, 0, 0, 0.5); /* Semi-transparent red */
-    --color-calendar-nav-button-bg: #FF0000;
-    --color-calendar-nav-button-text: #FF0000;
-    --color-calendar-nav-button-border: #FF0000;
-    --color-calendar-today-button-bg: #FF0000;
-    --color-calendar-today-button-text: #FF0000;
-    --color-calendar-today-button-border: #FF0000;
-    --color-event-border: #FF0000;
-    --color-event-text: #FF0000;
-    
+    --color-calendar-bg: var(--white);
+    --color-calendar-lines: var(--eggplant-12);
+    --color-calendar-text: var(--black);
+    --color-calendar-today-bg: var(--pink-12);
+    --color-calendar-nav-button-bg: var(--white);
+    --color-calendar-nav-button-text: var(--black);
+    --color-calendar-nav-button-border: var(--eggplant-12);
+    --color-calendar-today-button-bg: var(--bright-pink);
+    --color-calendar-today-button-text: var(--black);
+    --color-calendar-today-button-border: transparent;
+    --color-event-border: var(--mulberry);
+    --color-event-text: var(--black);
+
     /* ------------------------------------ */
     /* 4. Modal Window Elements             */
     /* ------------------------------------ */
-    --color-modal-bg: #FF0000;
-    --color-modal-text: #FF0000;
-    --color-modal-input-border: #FF0000;
-    --color-modal-input-focus-border: #FF0000;
-    --color-modal-input-focus-shadow: #FF0000;
+    --color-modal-bg: var(--white);
+    --color-modal-text: var(--black);
+    --color-modal-input-border: var(--eggplant-12);
+    --color-modal-input-focus-border: var(--mulberry);
+    --color-modal-input-focus-shadow: 0 0 0 3px var(--cerise-16);
 
     /* --- "Delete task" Button --- */
-    --color-button-delete-text: #FF0000;
-    --color-button-delete-bg: #FF0000;
-    --color-button-delete-border: #FF0000;
+    --color-button-delete-text: var(--black);
+    --color-button-delete-bg: var(--cerise);
+    --color-button-delete-border: transparent;
 
     /* --- "Cancel" Button --- */
-    --color-button-cancel-text: #FF0000;
-    --color-button-cancel-bg: #FF0000;
-    --color-button-cancel-border: #FF0000;
+    --color-button-cancel-text: var(--black);
+    --color-button-cancel-bg: var(--white);
+    --color-button-cancel-border: var(--eggplant-12);
 
     /* --- "Save" Button --- */
-    --color-button-save-text: #FF0000;
-    --color-button-save-bg: #FF0000;
-    --color-button-save-border: #FF0000;
+    --color-button-save-text: var(--black);
+    --color-button-save-bg: var(--bright-pink);
+    --color-button-save-border: transparent;
+}
+
+/* Optional hovers (only if you use them via var()) */
+:root {
+    --hover-primary-bg: #ff7486; 
+    --hover-secondary-bg: #cc2e77;
 }
