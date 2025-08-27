@@ -5,28 +5,29 @@
 @tailwind utilities;
 
 :root{
-  --gc-line: #ff5ca8; /* розовая ЧАСОВАЯ линия */
-  --cal-bg: #fff;     /* фон календаря */
+  /* Your theme variables */
+  --color-pale-dogwood: #DFBBB1;
+  --color-bright-pink: #F56476;
+  --color-cerise: #E43F6F;
+  --color-mulberry: #BE3E82;
+  --color-eggplant: #5E4352;
 }
 
 html, body, #root {
   height: 100%;
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background: var(--cal-bg);
+  background: var(--color-bg-app);
 }
 
-/* Вертикальные разделители между днями (можешь убрать, если не нужны) */
 .rbc-time-content > * + * {
-  border-left: 1px solid #ddd !important;
+  border-left: 1px solid var(--color-calendar-lines) !important;
 }
 
-/* ВАЖНО: выключаем линию у каждого слота по умолчанию */
 .rbc-time-slot {
   border-top: 0 !important;
 }
 
-/* Ширина колонки с временем */
 .rbc-time-gutter {
   width: 60px;
 }

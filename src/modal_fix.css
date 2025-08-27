@@ -1,25 +1,26 @@
+/* src/modal_fix.css */
+
 /* ===== Modal hardening v3: define theme tokens + force opaque modals/popovers ===== */
 
-/* 1) Global design tokens (missing before, made dialogs transparent when using var(--surface), etc.) */
+/* 1) Global design tokens (using the new palette) */
 :root{
-  /* App Theme */
-  --bg:       #f8fafc;   /* page background */
-  --surface:  #ffffff;   /* cards / modals background */
-  --text:     #0f172a;   /* text on surface */
-  --muted:    #64748b;   /* secondary text */
-  --border:   #e5e7eb;   /* card borders */
-  --accent:   #6366f1;   /* primary/accent */
+  --bg: var(--color-bg-app);
+  --surface: var(--color-modal-bg);
+  --text: var(--color-modal-text);
+  --muted: var(--color-text-muted);
+  --border: var(--color-modal-input-border);
+  --accent: var(--color-modal-input-focus-border);
 
   /* Modal specifics */
   --tm-modal-overlay: rgba(2, 6, 23, 0.45);
-  --tm-modal-bg: var(--surface);
-  --tm-modal-text: var(--text);
+  --tm-modal-bg: var(--color-modal-bg);
+  --tm-modal-text: var(--color-modal-text);
   --tm-modal-radius: 16px;
   --tm-modal-shadow: 0 24px 56px rgba(2, 6, 23, 0.22), 0 8px 20px rgba(2, 6, 23, 0.12);
-  --tm-modal-border: 1px solid var(--border);
+  --tm-modal-border: 1px solid var(--color-modal-input-border);
 }
 
-/* 2) Backdrop/overlay — occupy whole screen; color via alpha, not element opacity */
+/* 2) Backdrop/overlay */
 .tm-modal-backdrop,
 [data-tm-overlay],
 div[class*="modal-backdrop"],
@@ -94,10 +95,11 @@ dialog,
 }
 
 /* Inputs/selects inside dialogs should be solid */
+.tm-modal input, .tm-modal select, .tm-modal textarea,
 div[role="dialog"] input, div[role="dialog"] select, div[role="dialog"] textarea,
 [aria-modal="true"] input, [aria-modal="true"] select, [aria-modal="true"] textarea,
 dialog input, dialog select, dialog textarea{
-  background: #fff !important;
+  background: var(--color-modal-input-bg) !important;
   color: var(--tm-modal-text) !important;
   border: 1px solid var(--border) !important;
   border-radius: 10px !important;
@@ -107,10 +109,5 @@ dialog input, dialog select, dialog textarea{
 div[role="dialog"] [style*="background: rgba"],
 [aria-modal="true"] [style*="background: rgba"],
 dialog [style*="background: rgba"]{
-  background: var(--tm-modal-bg) !important;
-}
-
-/* Safety: calendars stay opaque too */
-.fc, .fc .fc-view-harness, .fc .fc-scrollgrid{
   background: var(--tm-modal-bg) !important;
 }

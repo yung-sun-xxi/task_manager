@@ -32,8 +32,40 @@ type Props = {
   tasksById: Map<string, { title: string; color?: string }>;
 };
 
+// Функция throttle для оптимизации производительности
+const throttle = (func: Function, delay: number) => {
+    let inThrottle: boolean;
+    return (...args: any[]) => {
+        if (!inThrottle) {
+            func(...args);
+            inThrottle = true;
+            setTimeout(() => {
+                inThrottle = false;
+            }, delay);
+        }
+    };
+};
+
 const CalendarView: React.FC<Props> = (props) => {
   const calRef = useRef<FullCalendar | null>(null);
+
+  // Обработчик изменения размера окна с throttle
+  useEffect(() => {
+    const handleResize = () => {
+      const api = calRef.current?.getApi();
+      if (api) {
+        api.updateSize();
+      }
+    };
+    
+    // Задержка в 50 миллисекунд
+    const throttledHandleResize = throttle(handleResize, 50);
+
+    window.addEventListener("resize", throttledHandleResize);
+    return () => {
+      window.removeEventListener("resize", throttledHandleResize);
+    };
+  }, []);
 
   const pushAllEvents = useCallback(() => {
     const api = (calRef.current as any)?.getApi?.() as any;
@@ -93,7 +125,6 @@ const CalendarView: React.FC<Props> = (props) => {
     if (title) arg.event.setProp("title", title);
     if (tColor) {
       (arg.event as any).setProp("backgroundColor", tColor);
-      (arg.event as any).setProp("borderColor", tColor);
     }
     pushAllEvents();
   }, [pushAllEvents]);
@@ -157,7 +188,9 @@ const CalendarView: React.FC<Props> = (props) => {
         eventRemove={handleEventRemove}
         eventReceive={handleEventReceive}
         eventDidMount={eventDidMount}
-        height="auto"
+        height="100%"
+        themeSystem="bootstrap5"
+        eventClassNames="my-event"
       />
     </div>
   );

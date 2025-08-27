@@ -15,9 +15,10 @@ type Props = {
   allocations: Record<string, number>;
   onEstimateChange: (taskId: string, estimate: number) => void;
   onTaskDblClick?: (taskId: string) => void;
+  onAddTask?: () => void;
 };
 
-const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick }) => {
+const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick, onAddTask }) => {
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // Provide items (could sort later)
@@ -32,9 +33,11 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
       eventData: (taskEl) => {
         const id = taskEl.getAttribute("data-task-id") || "";
         const title = taskEl.getAttribute("data-title") || "";
+        const color = taskEl.getAttribute("data-color") || "";
         return {
           title,
           extendedProps: { taskId: id },
+          backgroundColor: color,
         };
       },
     });
@@ -45,28 +48,33 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
 
   return (
     <div className="tm-sidebar">
-      <h3 className="sidebar-title">Tasks</h3>
+      <div className="sidebar-title-row">
+        <h3 className="sidebar-title">Tasks</h3>
+        <button type="button" className="tm-btn tm-btn-primary tm-btn-icon" onClick={onAddTask} title="Add task">
+          +
+        </button>
+      </div>
       <div className="task-list" ref={listRef}>
         {items.map((t) => {
           const planned = allocations[t.id] || 0;
-          const ratio = planned / t.estimateHours;
+          const ratio = t.estimateHours > 0 ? planned / t.estimateHours : 0;
 
-          let barColor = "#2FBF71"; // Зеленый по умолчанию
+          let barColor = "#2FBF71"; // Default Green
           if (t.estimateHours > 0) {
             if (ratio <= 1.0) {
-              barColor = "#2FBF71"; // Зеленый
+              barColor = "#2FBF71"; // Green
             } else if (ratio <= 1.5) {
-              barColor = "#F9A03F"; // Желтый
+              barColor = "#F9A03F"; // Yellow
             } else if (ratio <= 2.0) {
-              barColor = "#D45113"; // Оранжевый
+              barColor = "#D45113"; // Orange
             } else if (ratio <= 3.0) {
-              barColor = "#EB3333"; // Красный
+              barColor = "#EB3333"; // Red
             } else {
-              barColor = "#820D0D"; // Бордовый
+              barColor = "#820D0D"; // Maroon
             }
           }
-
-          // Ограничиваем длину заголовка
+          
+          const eventColor = `var(--color-task-card-bg)`;
           const truncatedTitle = t.title.length > 70 ? t.title.slice(0, 67) + "..." : t.title;
 
           return (
@@ -76,10 +84,11 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
               onDoubleClick={() => onTaskDblClick && onTaskDblClick(t.id)}
               data-task-id={t.id}
               data-title={t.title}
+              data-color={eventColor}
               draggable
             >
               <div className="task-header">
-                <div className="task-title">{truncatedTitle}</div>
+                <div className="task-title" style={{ color: "var(--color-task-title)" }}>{truncatedTitle}</div>
                 {t.description ? <div className="task-desc">{t.description}</div> : null}
               </div>
 
