@@ -1,6 +1,6 @@
 /* src/calendar.css */
 
-/* === Шаг 1: Сброс всех границ === */
+/* === Step 1: Reset all borders === */
 .fc-theme-standard table,
 .fc-theme-standard thead,
 .fc-theme-standard tbody,
@@ -10,17 +10,17 @@
   border: 0 !important;
 }
 
-/* === Шаг 2: Базовые цвета и фон === */
+/* === Step 2: Base colors and background === */
 :root {
-  --line-color: var(--color-border);
+  --line-color: var(--color-calendar-lines);
 }
 
 .fc, .fc .fc-view-harness, .fc .fc-scrollgrid {
-  background: var(--color-bg) !important;
-  color: var(--color-text) !important;
+  background: var(--color-calendar-bg) !important;
+  color: var(--color-calendar-text) !important;
 }
 
-/* --- Шаг 3: Вертикальные линии --- */
+/* --- Step 3: Vertical lines --- */
 .fc .fc-timegrid-col,
 .fc-col-header-cell {
   border-left: 1px solid var(--line-color) !important;
@@ -31,7 +31,7 @@
     border-left: none !important;
 }
 
-/* --- Шаг 4: Горизонтальные линии и выравнивание времени --- */
+/* --- Step 4: Horizontal lines and time alignment --- */
 .fc .fc-timegrid-slots .fc-timegrid-slot[data-time$=":00:00"],
 .fc .fc-timegrid-axis .fc-timegrid-slot[data-time$=":00:00"] {
   border-top: 1px solid var(--line-color) !important;
@@ -41,10 +41,10 @@
     display: flex;
     align-items: center;
     height: 100%;
-    color: var(--color-muted) !important;
+    color: var(--color-text-muted) !important;
 }
 
-/* --- Шаг 5: Стилизация событий --- */
+/* --- Step 5: Event styling --- */
 .fc-timegrid-event-harness {
   left: 0 !important;
   margin-left: 0 !important;
@@ -53,12 +53,12 @@
 .fc-event {
   width: calc(100% - 5px) !important;
   border-radius: 8px !important;
-  background-color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: #fff !important;
+  background-color: var(--color-button-save-bg) !important;
+  border-color: var(--color-button-save-border) !important;
+  color: var(--color-button-save-text) !important;
 }
 
-/* === Шаг 6: Изменение высоты строк и заголовков === */
+/* === Step 6: Adjusting row and header height === */
 .fc-timegrid-slot {
   height: 1.5em !important;
 }
@@ -69,20 +69,20 @@
 
 /* Additional styling for header */
 .fc-toolbar-title {
-  color: var(--color-text) !important;
+  color: var(--color-calendar-text) !important;
 }
 
 .fc-button {
-  border-color: var(--color-border) !important;
-  color: var(--color-text) !important;
+  border-color: var(--color-calendar-nav-button-border) !important;
+  color: var(--color-calendar-nav-button-text) !important;
 }
 .fc-button:hover {
-  background-color: var(--color-bg) !important;
+  background-color: var(--color-calendar-nav-button-bg) !important;
 }
 .fc-button-primary {
-  background-color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: #fff !important;
+  background-color: var(--color-calendar-today-button-bg) !important;
+  border-color: var(--color-calendar-today-button-border) !important;
+  color: var(--color-calendar-today-button-text) !important;
 }
 .fc-button-primary:hover {
   background-color: var(--color-accent) !important;

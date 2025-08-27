@@ -19,7 +19,7 @@
   padding: 0 15px 0 10px;
 }
 
-/* Стилизация ползунка */
+/* Sidebar resizer styling */
 .sidebar-resizer {
   position: absolute;
   right: 0;
@@ -69,6 +69,7 @@
   cursor: grab;
   box-shadow: 0 1px 1px var(--color-shadow);
   color: var(--color-text) !important;
+  background: var(--color-task-card-bg) !important;
 }
 
 .tm-task-item:active {
@@ -126,37 +127,37 @@
   box-shadow: var(--tm-modal-shadow);
   padding: 18px;
   position: relative;
-  background: var(--color-surface) !important;
+  background: var(--color-modal-bg) !important;
 }
 
 .tm-modal-title {
   margin: 0 0 12px;
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-text) !important;
+  color: var(--color-modal-text) !important;
 }
 
 .tm-label {
   display: block;
   font-size: 12px;
-  color: var(--color-muted) !important;
+  color: var(--color-text-muted) !important;
   margin: 8px 0 4px;
 }
 
 .tm-input,
 .tm-textarea {
   width: 100%;
-  border: 1px solid var(--color-border) !important;
+  border: 1px solid var(--color-modal-input-border) !important;
   border-radius: 10px;
   padding: 8px 10px;
   outline: none;
   font-size: 14px;
-  color: var(--color-text) !important;
+  color: var(--color-modal-text) !important;
 }
 
 .tm-input:focus,
 .tm-textarea:focus {
-  border-color: var(--color-accent) !important;
+  border-color: var(--color-modal-input-focus-border) !important;
   box-shadow: 0 0 0 3px rgba(190, 62, 130, 0.15) !important;
 }
 
@@ -164,15 +165,15 @@
   resize: vertical;
 }
 
-/* Новый класс для компактного поля ввода */
+/* New class for a compact input field */
 .tm-input-small {
   width: 80px;
-  border: 1px solid var(--color-border) !important;
+  border: 1px solid var(--color-modal-input-border) !important;
   border-radius: 10px;
   padding: 8px 10px;
   outline: none;
   font-size: 14px;
-  color: var(--color-text) !important;
+  color: var(--color-modal-text) !important;
 }
 
 .tm-modal-actions {
@@ -211,18 +212,18 @@
 
 .tm-btn:hover { background: var(--color-bg) !important; }
 .tm-btn-primary {
-  border-color: var(--color-primary) !important;
-  background: var(--color-primary) !important;
-  color: #fff !important;
+  border-color: var(--color-button-save-border) !important;
+  background: var(--color-button-save-bg) !important;
+  color: var(--color-button-save-text) !important;
 }
 .tm-btn-primary:hover { background: var(--color-accent) !important; }
 .tm-btn-danger {
-  border-color: var(--color-status-red) !important;
-  color: var(--color-status-red) !important;
+  border-color: var(--color-button-delete-border) !important;
+  color: var(--color-button-delete-text) !important;
 }
 .tm-btn-danger:hover { background: #fdf5f5 !important; }
 
-/* Убираем стрелки в полях ввода типа number */
+/* Remove arrows from number input fields */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;

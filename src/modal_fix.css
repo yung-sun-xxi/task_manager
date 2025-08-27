@@ -1,21 +1,23 @@
+/* src/modal_fix.css */
+
 /* ===== Modal hardening v3: define theme tokens + force opaque modals/popovers ===== */
 
 /* 1) Global design tokens (using the new palette) */
 :root{
-  --bg: var(--color-bg);
-  --surface: var(--color-surface);
-  --text: var(--color-text);
-  --muted: var(--color-muted);
-  --border: var(--color-border);
-  --accent: var(--color-accent);
+  --bg: var(--color-bg-app);
+  --surface: var(--color-modal-bg);
+  --text: var(--color-modal-text);
+  --muted: var(--color-text-muted);
+  --border: var(--color-modal-input-border);
+  --accent: var(--color-modal-input-focus-border);
 
   /* Modal specifics */
   --tm-modal-overlay: rgba(2, 6, 23, 0.45);
-  --tm-modal-bg: var(--color-surface);
-  --tm-modal-text: var(--text);
+  --tm-modal-bg: var(--color-modal-bg);
+  --tm-modal-text: var(--color-modal-text);
   --tm-modal-radius: 16px;
   --tm-modal-shadow: 0 24px 56px rgba(2, 6, 23, 0.22), 0 8px 20px rgba(2, 6, 23, 0.12);
-  --tm-modal-border: 1px solid var(--color-border);
+  --tm-modal-border: 1px solid var(--color-modal-input-border);
 }
 
 /* 2) Backdrop/overlay */

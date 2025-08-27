@@ -1,0 +1,64 @@
+/* src/colors.css */
+
+/*
+* This file centralizes all application color variables.
+* Change the values to customize the application's appearance.
+*/
+
+:root {
+    /* ------------------------------------ */
+    /* 1. General App Colors                */
+    /* ------------------------------------ */
+    --color-bg-app: #FF0000; /* Bright red */
+    --color-text-primary: #5E4352;
+    --color-text-muted: #8a7a85;
+
+    /* ------------------------------------ */
+    /* 2. Sidebar Elements                  */
+    /* ------------------------------------ */
+    --color-sidebar-bg: #FFFF00; /* Bright yellow */
+    --color-task-card-bg: #00FF00; /* Bright green */
+    --color-task-card-border: #FF00FF; /* Bright magenta */
+    --color-task-card-shadow: #000000;
+    --color-sidebar-button-bg: #800080; /* Purple */
+    --color-sidebar-button-text: #FFFFFF;
+    --color-sidebar-button-border: #800080;
+
+    /* ------------------------------------ */
+    /* 3. Calendar Elements                 */
+    /* ------------------------------------ */
+    --color-calendar-bg: #008080; /* Teal */
+    --color-calendar-lines: #FF4500; /* Orange-red */
+    --color-calendar-text: #0000FF; /* Bright blue */
+    --color-calendar-today-bg: rgba(255, 140, 0, 0.5); /* Semi-transparent dark orange */
+    --color-calendar-nav-button-bg: #FFFF00; /* Bright yellow */
+    --color-calendar-nav-button-text: #0000FF; /* Bright blue */
+    --color-calendar-nav-button-border: #FF00FF; /* Bright magenta */
+    --color-calendar-today-button-bg: #800080; /* Purple */
+    --color-calendar-today-button-text: #ffffff;
+    --color-calendar-today-button-border: #800080;
+
+    /* ------------------------------------ */
+    /* 4. Modal Window Elements             */
+    /* ------------------------------------ */
+    --color-modal-bg: #FF00FF; /* Bright magenta */
+    --color-modal-text: #0000FF; /* Bright blue */
+    --color-modal-input-border: #FF4500; /* Orange-red */
+    --color-modal-input-focus-border: #800080; /* Purple */
+    --color-modal-input-focus-shadow: #000000;
+
+    /* --- "Delete task" Button --- */
+    --color-button-delete-text: #c94c4c;
+    --color-button-delete-bg: transparent;
+    --color-button-delete-border: #c94c4c;
+
+    /* --- "Cancel" Button --- */
+    --color-button-cancel-text: #FFFF00; /* Bright yellow */
+    --color-button-cancel-bg: #00FF00; /* Bright green */
+    --color-button-cancel-border: #FF00FF; /* Bright magenta */
+
+    /* --- "Save" Button --- */
+    --color-button-save-text: #FFFFFF;
+    --color-button-save-bg: #800080; /* Purple */
+    --color-button-save-border: #800080;
+}
