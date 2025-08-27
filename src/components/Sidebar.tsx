@@ -33,9 +33,12 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
       eventData: (taskEl) => {
         const id = taskEl.getAttribute("data-task-id") || "";
         const title = taskEl.getAttribute("data-title") || "";
+        const color = taskEl.getAttribute("data-color") || "";
         return {
           title,
           extendedProps: { taskId: id },
+          backgroundColor: color,
+          borderColor: color,
         };
       },
     });
@@ -57,20 +60,22 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
           const planned = allocations[t.id] || 0;
           const ratio = planned / t.estimateHours;
 
-          let barColor = "#2FBF71"; // Зеленый по умолчанию
+          let barColor = "var(--color-status-green)"; // Зеленый по умолчанию
           if (t.estimateHours > 0) {
             if (ratio <= 1.0) {
-              barColor = "#2FBF71"; // Зеленый
+              barColor = "var(--color-status-green)"; // Зеленый
             } else if (ratio <= 1.5) {
-              barColor = "#F9A03F"; // Желтый
+              barColor = "var(--color-status-yellow)"; // Желтый
             } else if (ratio <= 2.0) {
-              barColor = "#D45113"; // Оранжевый
+              barColor = "var(--color-status-orange)"; // Оранжевый
             } else if (ratio <= 3.0) {
-              barColor = "#EB3333"; // Красный
+              barColor = "var(--color-status-red)"; // Красный
             } else {
-              barColor = "#820D0D"; // Бордовый
+              barColor = "var(--color-status-maroon)"; // Бордовый
             }
           }
+          
+          const eventColor = `var(--color-primary)`;
 
           // Ограничиваем длину заголовка
           const truncatedTitle = t.title.length > 70 ? t.title.slice(0, 67) + "..." : t.title;
@@ -82,6 +87,7 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
               onDoubleClick={() => onTaskDblClick && onTaskDblClick(t.id)}
               data-task-id={t.id}
               data-title={t.title}
+              data-color={eventColor}
               draggable
             >
               <div className="task-header">

@@ -1,7 +1,6 @@
 /* src/calendar.css */
 
 /* === Шаг 1: Сброс всех границ === */
-/* Мы сбрасываем ВСЕ стандартные границы в календаре, чтобы начать с чистого листа. */
 .fc-theme-standard table,
 .fc-theme-standard thead,
 .fc-theme-standard tbody,
@@ -13,76 +12,81 @@
 
 /* === Шаг 2: Базовые цвета и фон === */
 :root {
-  --line-color: #ccc;
-  --bg-color: #ffffff;
+  --line-color: var(--color-border);
+  --bg-color: var(--color-surface);
 }
 
 .fc, .fc .fc-view-harness, .fc .fc-scrollgrid {
-  background: var(--bg-color);
+  background: var(--bg-color) !important;
+  color: var(--color-text) !important;
 }
 
 /* --- Шаг 3: Вертикальные линии --- */
-/* Создаем вертикальные линии, добавляя левую границу к колонкам дней */
 .fc .fc-timegrid-col,
 .fc-col-header-cell {
   border-left: 1px solid var(--line-color) !important;
 }
 
-/* Убираем лишнюю границу у первой колонки */
 .fc .fc-timegrid-col:first-of-type,
 .fc-col-header-cell:first-of-type {
     border-left: none !important;
 }
 
 /* --- Шаг 4: Горизонтальные линии и выравнивание времени --- */
-
-/* Добавляем верхнюю границу для всех слотов, начинающихся в :00 */
-/* Это обеспечивает идеальное совпадение с границами событий */
 .fc .fc-timegrid-slots .fc-timegrid-slot[data-time$=":00:00"],
 .fc .fc-timegrid-axis .fc-timegrid-slot[data-time$=":00:00"] {
   border-top: 1px solid var(--line-color) !important;
 }
 
-/* Используем Flexbox для выравнивания текста времени по центру */
 .fc .fc-timegrid-axis .fc-timegrid-slot-label {
     display: flex;
     align-items: center;
     height: 100%;
+    color: var(--color-muted) !important;
 }
 
 /* --- Шаг 5: Стилизация событий --- */
-/* Убираем отступ слева и делаем события уже */
 .fc-timegrid-event-harness {
   left: 0 !important;
   margin-left: 0 !important;
 }
 
-/* Настройки для самого события */
 .fc-event {
-  width: calc(100% - 5px); /* Сохраняем отступ справа */
-  border-radius: 8px;
+  width: calc(100% - 5px) !important;
+  border-radius: 8px !important;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
 }
 
 /* === Шаг 6: Изменение высоты строк и заголовков === */
-
-/* Уменьшаем высоту строк в два раза */
 .fc-timegrid-slot {
   height: 1.5em !important;
 }
 
-/* Увеличиваем высоту заголовков дней */
 .fc-col-header-cell-cush {
     padding: 1.5em !important;
 }
 
-/* === Шаг 6: Изменение высоты строк и заголовков === */
-
-/* Уменьшаем высоту строк в два раза */
-.fc-timegrid-slot {
-  height: 1.5em !important;
+/* Additional styling for header */
+.fc-toolbar-title {
+  color: var(--color-text) !important;
 }
 
-/* Увеличиваем высоту заголовков дней */
-.fc-col-header-cell-cush {
-    padding: 1.5em !important;
+.fc-button {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+.fc-button:hover {
+  background-color: var(--color-bg) !important;
+}
+.fc-button-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+}
+.fc-button-primary:hover {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
 }

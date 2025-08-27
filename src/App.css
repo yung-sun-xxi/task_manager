@@ -5,17 +5,17 @@
   height: 100vh;
   overflow: hidden;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  background: var(--color-bg) !important;
 }
 
 .sidebar {
-  /* Убираем фиксированную ширину и заменяем ее на динамическую */
   width: 288px;
-  min-width: 300px; /* Устанавливаем минимальную ширину сайдбара */
-  max-width: 500px; /* Ограничиваем максимальную ширину */
+  min-width: 300px;
+  max-width: 500px;
   flex: 0 0 auto;
   height: 100%;
-  border-right: 1px solid rgba(0,0,0,0.08);
-  background: #fafafa;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface) !important;
   overflow: hidden auto;
   position: relative;
   padding: 0 15px 0 10px;
@@ -28,8 +28,8 @@
   top: 0;
   height: 100%;
   width: 5px;
-  background: #e2e8f0;
-  border-right: 1px solid #94a3b8;
+  background: var(--color-border);
+  border-right: 1px solid var(--color-muted);
   cursor: ew-resize;
   z-index: 10;
 }
@@ -39,7 +39,7 @@
   flex: 1 1 auto;
   height: 100%;
   overflow: hidden auto;
-  background: #fff;
+  background: var(--color-bg) !important;
 }
 
 .calendar-wrapper {
@@ -56,6 +56,7 @@
   font-size: 18px;
   font-weight: 600;
   margin: 8px 0 12px;
+  color: var(--color-text);
 }
 
 .task-list {
@@ -65,12 +66,13 @@
 }
 
 .tm-task-item {
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.08);
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
   border-radius: 12px;
   padding: 10px;
   cursor: grab;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 1px var(--color-shadow);
+  color: var(--color-text) !important;
 }
 
 .tm-task-item:active {
@@ -94,15 +96,15 @@
 
 .task-hours {
   font-variant-numeric: tabular-nums;
-  color: #334155;
-  background: #f1f5f9;
+  color: var(--color-muted);
+  background: rgba(94, 67, 82, 0.05);
   border-radius: 8px;
   padding: 2px 6px;
   font-size: 12px;
 }
 
 .task-desc {
-  color: #475569;
+  color: var(--color-muted);
   font-size: 12px;
   margin-bottom: 6px;
   white-space: pre-wrap;
@@ -116,7 +118,7 @@
 .tm-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(17,24,39,0.45);
+  background: var(--tm-modal-overlay) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -125,9 +127,9 @@
 
 .tm-modal {
   width: min(560px, 92vw);
-  background: #fff;
+  background: var(--color-surface) !important;
   border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  box-shadow: var(--tm-modal-shadow);
   padding: 18px;
   position: relative;
 }
@@ -136,29 +138,32 @@
   margin: 0 0 12px;
   font-size: 18px;
   font-weight: 700;
+  color: var(--color-text) !important;
 }
 
 .tm-label {
   display: block;
   font-size: 12px;
-  color: #475569;
+  color: var(--color-muted) !important;
   margin: 8px 0 4px;
 }
 
 .tm-input,
 .tm-textarea {
   width: 100%;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border) !important;
   border-radius: 10px;
   padding: 8px 10px;
   outline: none;
   font-size: 14px;
+  color: var(--color-text) !important;
+  background: var(--color-surface) !important;
 }
 
 .tm-input:focus,
 .tm-textarea:focus {
-  border-color: #93c5fd;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 3px rgba(190, 62, 130, 0.15) !important;
 }
 
 .tm-textarea {
@@ -168,11 +173,13 @@
 /* Новый класс для компактного поля ввода */
 .tm-input-small {
   width: 80px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border) !important;
   border-radius: 10px;
   padding: 8px 10px;
   outline: none;
   font-size: 14px;
+  color: var(--color-text) !important;
+  background: var(--color-surface) !important;
 }
 
 .tm-modal-actions {
@@ -203,26 +210,26 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #0f172a;
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
   font-weight: 500;
   user-select: none;
 }
 
-.tm-btn:hover { background: #f8fafc; }
+.tm-btn:hover { background: var(--color-bg) !important; }
 .tm-btn-primary {
-  border-color: #3b82f6;
-  background: #3b82f6;
-  color: #fff;
+  border-color: var(--color-primary) !important;
+  background: var(--color-primary) !important;
+  color: #fff !important;
 }
-.tm-btn-primary:hover { background: #2563eb; }
+.tm-btn-primary:hover { background: var(--color-accent) !important; }
 .tm-btn-danger {
-  border-color: #f87171;
-  color: #b91c1c;
-  background: #fff;
+  border-color: var(--color-status-red) !important;
+  color: var(--color-status-red) !important;
+  background: var(--color-surface) !important;
 }
-.tm-btn-danger:hover { background: #fee2e2; }
+.tm-btn-danger:hover { background: #fdf5f5 !important; }
 
 /* Убираем стрелки в полях ввода типа number */
 input[type="number"]::-webkit-outer-spin-button,
@@ -240,13 +247,13 @@ input[type="number"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px; /* Увеличиваем расстояние между баром и цифрами */
+  gap: 15px;
 }
 
 .task-bar-container {
-  flex-grow: 1; /* Позволяем бару растягиваться */
+  flex-grow: 1;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--color-border);
   border-radius: 4px;
   margin-top: 4px;
   margin-bottom: 6px;
@@ -255,13 +262,13 @@ input[type="number"] {
 
 .task-bar-fill {
   height: 100%;
-  background: #3b82f6;
+  background: var(--color-primary);
   transition: width 0.3s ease-in-out;
 }
 
 .task-bar-label {
   font-size: 12px;
-  color: #475569;
+  color: var(--color-muted);
   text-align: right;
   margin-bottom: 0;
   white-space: nowrap;

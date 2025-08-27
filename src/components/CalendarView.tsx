@@ -190,6 +190,8 @@ const CalendarView: React.FC<Props> = (props) => {
         eventReceive={handleEventReceive}
         eventDidMount={eventDidMount}
         height="100%"
+        themeSystem="bootstrap5"
+        eventClassNames="my-event"
       />
     </div>
   );
