@@ -70,7 +70,7 @@
 
 /* === Step 6: Adjusting row and header height === */
 .fc-timegrid-slot {
-  height: 1.5em !important;
+  height: 1.0em !important;
 }
 
 .fc-col-header-cell-cush {

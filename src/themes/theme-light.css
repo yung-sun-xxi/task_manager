@@ -1,11 +1,11 @@
-/* src/colors.css */
+/* src/themes/theme-light.css */
 
 /*
-* Centralized application color variables.
-* Palette is based on: DFBBB1, F56476, E43F6F, BE3E82, 5E4352
+* Light Theme — based on your colors.css
+* Palette: DFBBB1, F56476, E43F6F, BE3E82, 5E4352
 */
 
-:root {
+html.theme-light {
     /* ------------------------------------ */
     /* 0. Core Palette                      */
     /* ------------------------------------ */
@@ -51,7 +51,7 @@
     --color-task-hours-bg: #F3D0DA;                /* light pink label bg */
     --color-task-bar-label: var(--black);
     --color-sidebar-title: var(--black);
-    
+
     --color-sidebar-resizer-bg: var(--eggplant-12);      /* sidebar resizer background */
     --color-sidebar-resizer-hover-bg: var(--mulberry);   /* sidebar resizer hover */
 
@@ -102,10 +102,8 @@
     --color-button-save-text: var(--black);
     --color-button-save-bg: var(--bright-pink);
     --color-button-save-border: transparent;
-}
 
-/* Optional hover states */
-:root {
+    /* Optional hover states */
     --hover-primary-bg: #ff7486;   /* hover for primary buttons */
     --hover-secondary-bg: #cc2e77; /* hover for secondary elements */
 }

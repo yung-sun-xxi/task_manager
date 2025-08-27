@@ -1,0 +1,108 @@
+/* src/themes/theme-dark.css */
+
+/*
+* Dark Theme — “all black” per your rule
+*/
+
+html.theme-dark {
+    /* ------------------------------------ */
+    /* 0. Core Palette                      */
+    /* ------------------------------------ */
+    --pale-dogwood: #000000;
+    --bright-pink:  #000000;
+    --cerise:       #000000;
+    --mulberry:     #000000;
+    --eggplant:     #000000;
+    --white:        #000000;
+    --black:        #000000;
+
+    /* Derived tints & alphas */
+    --eggplant-80: #000000;
+    --eggplant-60: #000000;
+    --eggplant-12: #000000;
+    --pink-12:     #000000;
+    --pink-20:     #000000;
+    --mulberry-16: #000000;
+    --cerise-16:   #000000;
+
+    /* ------------------------------------ */
+    /* 1. General App Colors                */
+    /* ------------------------------------ */
+    --color-bg-app: #000000;
+    --color-text-primary: #000000;
+    --color-text-muted: #000000;
+    --color-primary: #000000;
+
+    /* ------------------------------------ */
+    /* 2. Sidebar Elements                  */
+    /* ------------------------------------ */
+    --color-sidebar-bg: #000000;
+    --color-task-card-bg: #000000;
+    --color-task-card-border: #000000;
+    --color-task-card-shadow: none;
+
+    --color-sidebar-button-bg: #000000;
+    --color-sidebar-button-text: #000000;
+    --color-sidebar-button-border: #000000;
+
+    --color-task-title: #000000;
+    --color-task-hours-text: #000000;
+    --color-task-hours-bg: #000000;
+    --color-task-bar-label: #000000;
+    --color-sidebar-title: #000000;
+
+    --color-sidebar-resizer-bg: #000000;
+    --color-sidebar-resizer-hover-bg: #000000;
+
+    /* Dynamic bar chart colors */
+    --color-status-green:  #000000;
+    --color-status-yellow: #000000;
+    --color-status-orange: #000000;
+    --color-status-red:    #000000;
+    --color-status-maroon: #000000;
+
+    /* ------------------------------------ */
+    /* 3. Calendar Elements                 */
+    /* ------------------------------------ */
+    --color-calendar-bg: #000000;
+    --color-calendar-lines: #000000;
+    --color-calendar-text: #000000;
+    --color-calendar-today-bg: #000000;
+    --color-calendar-nav-button-bg: #000000;
+    --color-calendar-nav-button-text: #000000;
+    --color-calendar-nav-button-border: #000000;
+    --color-calendar-today-button-bg: #000000;
+    --color-calendar-today-button-text: #000000;
+    --color-calendar-today-button-border: #000000;
+    --color-event-border: #000000;
+    --color-event-text: #000000;
+
+    /* ------------------------------------ */
+    /* 4. Modal Window Elements             */
+    /* ------------------------------------ */
+    --color-modal-bg: #000000;
+    --color-modal-text: #000000;
+    --color-modal-input-bg: #000000;
+    --color-modal-input-border: #000000;
+    --color-modal-input-focus-border: #000000;
+    --color-modal-input-focus-shadow: none;
+
+    /* --- "Delete task" Button --- */
+    --color-button-delete-text: #000000;
+    --color-button-delete-bg: #000000;
+    --color-button-delete-border: #000000;
+
+    /* --- "Cancel" Button --- */
+    --color-button-cancel-text: #000000;
+    --color-button-cancel-bg: #000000;
+    --color-button-cancel-border: #000000;
+
+    /* --- "Save" Button --- */
+    --color-button-save-text: #000000;
+    --color-button-save-bg: #000000;
+    --color-button-save-border: #000000;
+
+    /* Optional hover states */
+    --hover-primary-bg: #000000;
+    --hover-secondary-bg: #000000;
+}

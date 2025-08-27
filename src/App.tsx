@@ -4,6 +4,9 @@ import Sidebar, { Task } from "./components/Sidebar";
 import CalendarView, { PlainEvent } from "./components/CalendarView";
 import "./index.css";
 import "./App.css";
+import "./themes/themes.css";
+import "./themes/theme-light.css";
+import "./themes/theme-dark.css";
 
 const LS_TASKS = "tm_tasks_v1";
 const LS_EVENTS = "tm_events_v1";
@@ -51,6 +54,19 @@ const App: React.FC = () => {
   const [draftDescription, setDraftDescription] = useState("");
   const [draftEstimate, setDraftEstimate] = useState(0);
   const [pendingNewTaskId, setPendingNewTaskId] = useState<string | null>(null);
+
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    document.documentElement.classList.add("theme-light");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.classList.remove("theme-light", "theme-dark");
+    document.documentElement.classList.add(`theme-${next}`);
+  };
 
   // force refresh calendar after destructive ops
   const [calReset, setCalReset] = useState(0);
@@ -238,6 +254,17 @@ const App: React.FC = () => {
 
   return (
     <div className="app-shell">
+      {/* Theme toggle button (top-right, fixed) */}
+      <button
+        className="theme-toggle-btn"
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
+        data-testid="theme-toggle"
+      >
+        {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+      </button>
+
       <div className="sidebar" style={{ width: sidebarWidth }}>
         <Sidebar
           onAddTask={openNewTaskModal}
