@@ -4,6 +4,7 @@ import Sidebar, { Task } from "./components/Sidebar";
 import CalendarView, { PlainEvent } from "./components/CalendarView";
 import "./index.css";
 import "./App.css";
+import { loadStatuses, saveStatuses } from './utils/store';
 
 /** Theme files */
 import "./themes/theme-light.css";
@@ -16,140 +17,144 @@ const LS_THEME = "tm_theme_v1";
 
 /** Register available themes (id matches the suffix in html.theme-<id>) */
 const THEMES = [
-  { id: "light", label: "Light" },
-  { id: "dark", label: "Dark (all black)" },
-  { id: "sunny-pump", label: "Sunny Pump" },
+ { id: "light", label: "Light" },
+ { id: "dark", label: "Dark (all black)" },
+ { id: "sunny-pump", label: "Sunny Pump" },
 ];
 
 function loadTasks(): Task[] {
-  try {
-    const raw = localStorage.getItem(LS_TASKS);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return [];
+ try {
+ const raw = localStorage.getItem(LS_TASKS);
+ if (raw) return JSON.parse(raw);
+ } catch {}
+ return [];
 }
 function loadEvents(): PlainEvent[] {
-  try {
-    const raw = localStorage.getItem(LS_EVENTS);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return [];
+ try {
+ const raw = localStorage.getItem(LS_EVENTS);
+ if (raw) return JSON.parse(raw);
+ } catch {}
+ return [];
 }
 function saveTasks(tasks: Task[]) {
-  try { localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); } catch {}
+ try { localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); } catch {}
 }
 function saveEvents(events: PlainEvent[]) {
-  try { localStorage.setItem(LS_EVENTS, JSON.stringify(events)); } catch {}
+ try { localStorage.setItem(LS_EVENTS, JSON.stringify(events)); } catch {}
 }
 function genId(prefix: string) {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+ return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
 }
 
-// Теперь эта функция не нужна, так как мы используем maxLength
+// Now this function is not needed because we are using maxLength
 function truncateTitle(title: string): string {
-  if (title.length > 50) {
-    return title.slice(0, 47) + "...";
-  }
-  return title;
+ if (title.length >50) {
+ return title.slice(0,47) + "...";
+ }
+ return title;
 }
 
 const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
-  const [events, setEvents] = useState<PlainEvent[]>(() => loadEvents());
+ const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
+ const [events, setEvents] = useState<PlainEvent[]>(() => loadEvents());
+ const [statuses, setStatuses] = useState<string[]>(() => loadStatuses());
 
-  // modal state
-  const [isTaskModalOpen, setTaskModalOpen] = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [draftTitle, setDraftTitle] = useState("");
-  const [draftDescription, setDraftDescription] = useState("");
-  const [draftEstimate, setDraftEstimate] = useState(0);
-  const [pendingNewTaskId, setPendingNewTaskId] = useState<string | null>(null);
+ // modal state
+ const [isTaskModalOpen, setTaskModalOpen] = useState(false);
+ const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+ const [draftTitle, setDraftTitle] = useState("");
+ const [draftDescription, setDraftDescription] = useState("");
+ const [draftEstimate, setDraftEstimate] = useState(0);
+ const [draftStatus, setDraftStatus] = useState("");
+ const [pendingNewTaskId, setPendingNewTaskId] = useState<string | null>(null);
 
-  // theme state
-  const [theme, setTheme] = useState<string>(() => {
-    try { return localStorage.getItem(LS_THEME) || "light"; } catch { return "light"; }
-  });
+ // theme state
+ const [theme, setTheme] = useState<string>(() => {
+ try { return localStorage.getItem(LS_THEME) || "light"; } catch { return "light"; }
+ });
 
-  // theme menu state
-  const [menuOpen, setMenuOpen] = useState(false);
-  const pressTimerRef = useRef<number | null>(null);
-  const pressedRef = useRef(false);
-  const dragSelectActiveRef = useRef(false);
-  const suppressClickUntilRef = useRef(0);
+ // theme menu state
+ const [menuOpen, setMenuOpen] = useState(false);
+ const pressTimerRef = useRef<number | null>(null);
+ const pressedRef = useRef(false);
+ const dragSelectActiveRef = useRef(false);
+ const suppressClickUntilRef = useRef(0);
 
-  // apply theme on mount & on change
-  useEffect(() => {
-    const html = document.documentElement;
-    // remove all theme-* classes first
-    [...html.classList].forEach(c => { if (c.startsWith("theme-")) html.classList.remove(c); });
-    html.classList.add(`theme-${theme}`);
-    try { localStorage.setItem(LS_THEME, theme); } catch {}
-  }, [theme]);
+ // apply theme on mount & on change
+ useEffect(() => {
+ const html = document.documentElement;
+ // remove all theme-* classes first
+ [...html.classList].forEach(c => { if (c.startsWith("theme-")) html.classList.remove(c); });
+ html.classList.add(`theme-${theme}`);
+ try { localStorage.setItem(LS_THEME, theme); } catch {}
+ }, [theme]);
 
-  // force refresh calendar after destructive ops
-  const [calReset, setCalReset] = useState(0);
+ // force refresh calendar after destructive ops
+ const [calReset, setCalReset] = useState(0);
 
-  // sidebar resize state
-  const [sidebarWidth, setSidebarWidth] = useState(288);
+ // sidebar resize state
+ const [sidebarWidth, setSidebarWidth] = useState(288);
 
-  // persist
-  useEffect(() => saveTasks(tasks), [tasks]);
-  useEffect(() => saveEvents(events), [events]);
+ // persist
+ useEffect(() => saveTasks(tasks), [tasks]);
+ useEffect(() => saveEvents(events), [events]);
+ useEffect(() => saveStatuses(statuses), [statuses]);
 
-  // keep modal draft in sync with actual task while open
-  useEffect(() => {
-    if (!isTaskModalOpen || !editingTaskId) return;
-    const t = tasks.find(x => x.id === editingTaskId);
-    if (t) {
-      setDraftTitle(t.title);
-      setDraftDescription(t.description || "");
-      setDraftEstimate(t.estimateHours || 0);
-    }
-  }, [isTaskModalOpen, editingTaskId, tasks]);
+ // keep modal draft in sync with actual task while open
+useEffect(() => {
+  if (!isTaskModalOpen || !editingTaskId) return;
+  const t = tasks.find(x => x.id === editingTaskId);
+  if (t) {
+    setDraftTitle(t.title);
+    setDraftDescription(t.description || "");
+    setDraftEstimate(t.estimateHours || 0);
+    setDraftStatus(t.status || "");
+  }
+}, [isTaskModalOpen, editingTaskId, tasks]);
 
-  // Handle Escape key to close modal / close menu
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (isTaskModalOpen) closeModal();
-        if (menuOpen) setMenuOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => { window.removeEventListener('keydown', handleKeyDown); };
-  }, [isTaskModalOpen, menuOpen]);
+ // Handle Escape key to close modal / close menu
+ useEffect(() => {
+ const handleKeyDown = (event: KeyboardEvent) => {
+ if (event.key === 'Escape') {
+ if (isTaskModalOpen) closeModal();
+ if (menuOpen) setMenuOpen(false);
+ }
+ };
+ window.addEventListener('keydown', handleKeyDown);
+ return () => { window.removeEventListener('keydown', handleKeyDown); };
+ }, [isTaskModalOpen, menuOpen]);
 
-  // close theme menu on outside mousedown (robust)
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onMouseDown = (e: MouseEvent) => {
-      const path = (e.composedPath?.() || []) as EventTarget[];
-      const inside = path.some((n: any) => n?.classList?.contains?.("theme-menu") || n?.classList?.contains?.("theme-toggle-btn"));
-      if (!inside) setMenuOpen(false);
-    };
-    window.addEventListener("mousedown", onMouseDown, true);
-    return () => window.removeEventListener("mousedown", onMouseDown, true);
-  }, [menuOpen]);
+ // close theme menu on outside mousedown (robust)
+ useEffect(() => {
+ if (!menuOpen) return;
+ const onMouseDown = (e: MouseEvent) => {
+ const path = (e.composedPath?.() || []) as EventTarget[];
+ const inside = path.some((n: any) => n?.classList?.contains?.("theme-menu") || n?.classList?.contains?.("theme-toggle-btn"));
+ if (!inside) setMenuOpen(false);
+ };
+ window.addEventListener("mousedown", onMouseDown, true);
+ return () => window.removeEventListener("mousedown", onMouseDown, true);
+ }, [menuOpen]);
 
-  // press–drag–release: pick item on mouseup/touchend
-  useEffect(() => {
-    if (!menuOpen || !dragSelectActiveRef.current) return;
+ // press–drag–release: pick item on mouseup/touchend
+ useEffect(() => {
+ if (!menuOpen || !dragSelectActiveRef.current) return;
 
-    const pickFromEvent = (e: Event) => {
-      const path = (e as any).composedPath?.() || [];
-      const itemEl = path.find((n: any) => n?.classList?.contains?.("theme-menu-item")) as HTMLElement | undefined;
+ const pickFromEvent = (e: Event) => {
+ const path = (e as any).composedPath?.() || [];
+ const itemEl = path.find((n: any) => n?.classList?.contains?.("theme-menu-item")) as HTMLElement | undefined;
 
-      if (itemEl?.dataset?.themeid) {
-        applyTheme(itemEl.dataset.themeid);
-      } else {
-        const inside = path.some((n: any) =>
-          n?.classList?.contains?.("theme-menu") || n?.classList?.contains?.("theme-toggle-btn")
-        );
-        if (!inside) setMenuOpen(false);
-      }
-      dragSelectActiveRef.current = false;
-      pressedRef.current = false;
-    };
+ if (itemEl?.dataset?.themeid) {
+ applyTheme(itemEl.dataset.themeid);
+ } else {
+ const inside = path.some((n: any) =>
+ n?.classList?.contains?.("theme-menu") || n?.classList?.contains?.("theme-toggle-btn")
+ );
+ if (!inside) setMenuOpen(false);
+ }
+ dragSelectActiveRef.current = false;
+ pressedRef.current = false;
+ };
 
     window.addEventListener("mouseup", pickFromEvent, true);
     window.addEventListener("touchend", pickFromEvent, true);
@@ -270,7 +275,7 @@ const App: React.FC = () => {
 
     // update task
     const nextTasks = tasks.map(t =>
-      t.id === editingTaskId ? { ...t, title: title, description: draftDescription, estimateHours: estimate } : t
+      t.id === editingTaskId ? { ...t, title: title, description: draftDescription, estimateHours: estimate, status: draftStatus } : t
     );
     setTasks(nextTasks);
     saveTasks(nextTasks);
@@ -282,7 +287,7 @@ const App: React.FC = () => {
     saveEvents(nextEvents);
 
     closeModal();
-  }, [editingTaskId, draftTitle, draftDescription, draftEstimate, tasks, events, closeModal, pendingNewTaskId]);
+  }, [editingTaskId, draftTitle, draftDescription, draftEstimate, draftStatus, tasks, events, closeModal, pendingNewTaskId]);
 
   const deleteTask = useCallback((e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -382,6 +387,7 @@ const App: React.FC = () => {
           allocations={allocations}
           onEstimateChange={onEstimateChange}
           onTaskDblClick={handleEventDblClick}
+          statuses={statuses}
         />
         <div className="sidebar-resizer" onMouseDown={handleMouseDown}></div>
       </div>
@@ -397,70 +403,85 @@ const App: React.FC = () => {
         />
       </div>
 
-      {isTaskModalOpen && (
+    {isTaskModalOpen && (
+      <div
+        className="tm-modal-overlay"
+        onMouseDown={(evt) => evt.stopPropagation()}
+      >
         <div
-          className="tm-modal-overlay"
+          className="tm-modal"
           onMouseDown={(evt) => evt.stopPropagation()}
+          onClick={(evt) => evt.stopPropagation()}
         >
-          <div
-            className="tm-modal"
-            onMouseDown={(evt) => evt.stopPropagation()}
-            onClick={(evt) => evt.stopPropagation()}
-          >
-            <h2 id="tm-modal-title" className="tm-modal-title">Task</h2>
+          <h2 id="tm-modal-title" className="tm-modal-title">Task</h2>
 
-            <label className="tm-label" htmlFor="tm-task-title">Title</label>
-            <input
-              id="tm-task-title"
-              className="tm-input"
-              value={draftTitle}
-              onChange={(e) => setDraftTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  saveModal();
-                }
-              }}
-              maxLength={70}
-            />
+          <label className="tm-label" htmlFor="tm-task-title">Title</label>
+          <input
+            id="tm-task-title"
+            className="tm-input"
+            value={draftTitle}
+            onChange={(e) => setDraftTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                saveModal();
+              }
+            }}
+            maxLength={70}
+          />
 
-            <label className="tm-label" htmlFor="tm-task-desc">Description</label>
-            <textarea
-              id="tm-task-desc"
-              className="tm-textarea"
-              value={draftDescription}
-              onChange={(e) => setDraftDescription(e.target.value)}
-              rows={4}
-            />
+          <label className="tm-label" htmlFor="tm-task-desc">Description</label>
+          <textarea
+            id="tm-task-desc"
+            className="tm-textarea"
+            value={draftDescription}
+            onChange={(e) => setDraftDescription(e.target.value)}
+            rows={4}
+          />
 
-            <label className="tm-label" htmlFor="tm-task-est">Estimation, h</label>
-            <input
-              id="tm-task-est"
-              className="tm-input-small"
-              type="number"
-              step={0.25}
-              min={0}
-              value={draftEstimate}
-              onChange={(e) => setDraftEstimate(Number(e.target.value))}
-            />
+          <label className="tm-label" htmlFor="tm-task-est">Estimation, h</label>
+          <input
+            id="tm-task-est"
+            className="tm-input-small"
+            type="number"
+            step={0.25}
+            min={0}
+            value={draftEstimate}
+            onChange={(e) => setDraftEstimate(Number(e.target.value))}
+          />
 
-            <div className="tm-modal-actions">
-              <button
-                type="button"
-                className="tm-btn tm-btn-danger tm-btn-left"
-                onClick={(e) => deleteTask(e)}
-                data-testid="delete-task"
-              >
-                Delete task
-              </button>
-              <div className="tm-actions-right">
-                <button type="button" onClick={closeModal} className="tm-btn">Cancel</button>
-                <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary">Save</button>
-              </div>
+          <label className="tm-label" htmlFor="tm-task-status">Status</label>
+          <input
+            id="tm-task-status"
+            className="tm-input"
+            value={draftStatus}
+            onChange={(e) => setDraftStatus(e.target.value)}
+            list="statuses-list"
+            maxLength={20}
+          />
+          <datalist id="statuses-list">
+            {statuses.map((status) => (
+              <option key={status} value={status} />
+            ))}
+          </datalist>
+
+          <div className="tm-modal-actions">
+            <button
+              type="button"
+              className="tm-btn tm-btn-danger tm-btn-left"
+              onClick={(e) => deleteTask(e)}
+              data-testid="delete-task"
+            >
+              Delete task
+            </button>
+            <div className="tm-actions-right">
+              <button type="button" onClick={closeModal} className="tm-btn">Cancel</button>
+              <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary">Save</button>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-/* src/components/Sidebar.tsx */
+// src/components/Sidebar.tsx
 import React, { useEffect, useMemo, useRef } from "react";
 import { Draggable } from "@fullcalendar/interaction";
 
@@ -8,6 +8,7 @@ export type Task = {
   description?: string;
   estimateHours: number;
   color?: string;
+  status?: string;
 };
 
 type Props = {
@@ -16,9 +17,10 @@ type Props = {
   onEstimateChange: (taskId: string, estimate: number) => void;
   onTaskDblClick?: (taskId: string) => void;
   onAddTask?: () => void;
+  statuses: string[];
 };
 
-const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick, onAddTask }) => {
+const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTaskDblClick, onAddTask, statuses }) => {
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // Provide items (could sort later)
@@ -90,6 +92,11 @@ const Sidebar: React.FC<Props> = ({ tasks, allocations, onEstimateChange, onTask
               <div className="task-header">
                 <div className="task-title" style={{ color: "var(--color-task-title)" }}>{truncatedTitle}</div>
                 {t.description ? <div className="task-desc">{t.description}</div> : null}
+                {t.status && (
+                  <div className="task-status" style={{ color: "var(--color-text-muted)", fontSize: "12px" }}>
+                    Status: {t.status}
+                  </div>
+                )}
               </div>
 
               {/* Новый контейнер для барчарта и метки */}
