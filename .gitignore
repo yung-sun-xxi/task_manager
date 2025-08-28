@@ -35,3 +35,4 @@ EOF
 
 # other
 /scripts/
+/src/server.js
