@@ -400,7 +400,6 @@ const App: React.FC = () => {
       {isTaskModalOpen && (
         <div
           className="tm-modal-overlay"
-          onClick={(evt) => { if (evt.target === evt.currentTarget) closeModal(); }}
           onMouseDown={(evt) => evt.stopPropagation()}
         >
           <div
