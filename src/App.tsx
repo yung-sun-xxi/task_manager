@@ -59,6 +59,7 @@ const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [events, setEvents] = useState<PlainEvent[]>(() => loadEvents());
   const [statuses, setStatuses] = useState<string[]>(() => loadStatuses());
+  const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
   // new state to manage which view is active
   const [currentPage, setCurrentPage] = useState<"calendar" | "kanban">("calendar");
@@ -102,7 +103,7 @@ const App: React.FC = () => {
   // persist
   useEffect(() => saveTasks(tasks), [tasks]);
   useEffect(() => saveEvents(events), [events]);
-  useEffect(() => saveStatuses(statuses), [statuses]); // New useEffect to save statuses
+  useEffect(() => saveStatuses(statuses), [statuses]);
 
   // keep modal draft in sync with actual task while open
   useEffect(() => {
@@ -122,11 +123,12 @@ const App: React.FC = () => {
       if (event.key === 'Escape') {
         if (isTaskModalOpen) closeModal();
         if (menuOpen) setMenuOpen(false);
+        if (isConfirmModalOpen) setConfirmModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => { window.removeEventListener('keydown', handleKeyDown); };
-  }, [isTaskModalOpen, menuOpen]);
+  }, [isTaskModalOpen, menuOpen, isConfirmModalOpen]);
 
   // close theme menu on outside mousedown (robust)
   useEffect(() => {
@@ -321,6 +323,13 @@ const App: React.FC = () => {
     setCalReset(n => n + 1);
     closeModal();
   }, [editingTaskId, tasks, events, closeModal]);
+  
+  const handleDeleteAllTasks = useCallback(() => {
+      setTasks([]);
+      setEvents([]);
+      setStatuses([]);
+      setConfirmModalOpen(false);
+  }, []);
 
   /** Quick toggle on short click (cycles through THEMES) */
   const handleThemeClick = useCallback(() => {
@@ -359,22 +368,30 @@ const App: React.FC = () => {
 
   return (
     <div className="app-shell">
-      {/* Theme toggle button (top-right, fixed) */}
-      <button
-        className="theme-toggle-btn"
-        onClick={handleThemeClick}
-        onMouseDown={handlePressStart}
-        onMouseUp={handlePressEnd}
-        onMouseLeave={handlePressEnd}
-        onTouchStart={handlePressStart}
-        onTouchEnd={handlePressEnd}
-        aria-label="Toggle theme / open theme menu"
-        title="Click: switch theme • Hold: choose theme"
-        data-testid="theme-toggle"
-      >
-        {/* Simple label (you can customize per theme) */}
-        {theme === "light" ? "🌙 Dark" : "☀️ Light"}
-      </button>
+        <div className="top-right-actions">
+            <button
+                className="tm-btn tm-btn-danger"
+                onClick={() => setConfirmModalOpen(true)}
+            >
+                Delete All Tasks
+            </button>
+            {/* Theme toggle button */}
+            <button
+              className="theme-toggle-btn"
+              onClick={handleThemeClick}
+              onMouseDown={handlePressStart}
+              onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
+              onTouchStart={handlePressStart}
+              onTouchEnd={handlePressEnd}
+              aria-label="Toggle theme / open theme menu"
+              title="Click: switch theme • Hold: choose theme"
+              data-testid="theme-toggle"
+            >
+              {/* Simple label (you can customize per theme) */}
+              {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+            </button>
+        </div>
 
       {/* Theme menu */}
       {menuOpen && (
@@ -528,6 +545,33 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Confirmation modal for "Delete All Tasks" */}
+      {isConfirmModalOpen && (
+          <div
+              className="tm-modal-overlay"
+              onMouseDown={(e) => e.stopPropagation()}
+          >
+              <div className="tm-modal">
+                  <h2 className="tm-modal-title">Confirm Deletion</h2>
+                  <p>Are you sure you want to delete all tasks? This action cannot be undone.</p>
+                  <div className="tm-modal-actions">
+                      <button
+                          className="tm-btn tm-btn-danger"
+                          onClick={handleDeleteAllTasks}
+                      >
+                          Yes, Delete All
+                      </button>
+                      <button
+                          className="tm-btn"
+                          onClick={() => setConfirmModalOpen(false)}
+                      >
+                          Cancel
+                      </button>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );
