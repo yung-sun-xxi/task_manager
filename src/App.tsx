@@ -102,7 +102,7 @@ const App: React.FC = () => {
   // persist
   useEffect(() => saveTasks(tasks), [tasks]);
   useEffect(() => saveEvents(events), [events]);
-  useEffect(() => saveStatuses(statuses), [statuses]);
+  useEffect(() => saveStatuses(statuses), [statuses]); // New useEffect to save statuses
 
   // keep modal draft in sync with actual task while open
   useEffect(() => {
@@ -235,6 +235,7 @@ const App: React.FC = () => {
     setDraftTitle(t.title);
     setDraftDescription(t.description || "");
     setDraftEstimate(t.estimateHours || 0);
+    setDraftStatus(t.status || "");
     setTaskModalOpen(true);
   }, [tasks]);
 
@@ -282,7 +283,14 @@ const App: React.FC = () => {
       t.id === editingTaskId ? { ...t, title: title, description: draftDescription, estimateHours: estimate, status: draftStatus } : t
     );
     setTasks(nextTasks);
-    saveTasks(nextTasks);
+
+    // --- NEW LOGIC: Update and save the list of unique statuses ---
+    const allStatuses = new Set(nextTasks.map(t => t.status).filter(Boolean) as string[]);
+    const updatedStatuses = [...allStatuses];
+    setStatuses(updatedStatuses);
+    // --- END OF NEW LOGIC ---
+
+    saveTasks(nextTasks); // This function saves data to localStorage
 
     // sync events titles
     const nextEvents = events.map(ev => ((ev as any).taskId === editingTaskId ? { ...ev, title: title } as PlainEvent : ev));
