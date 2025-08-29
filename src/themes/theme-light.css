@@ -26,6 +26,9 @@ html.theme-light {
     --mulberry-16: rgba(190, 62, 130, 0.16);
     --cerise-16:   rgba(228, 63, 111, 0.16);
 
+    /* Upper divider */
+    --color-divider: var(--eggplant);   
+
     /* ------------------------------------ */
     /* 1. General App Colors                */
     /* ------------------------------------ */

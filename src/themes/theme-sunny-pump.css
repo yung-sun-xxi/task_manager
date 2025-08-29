@@ -26,6 +26,8 @@ html.theme-sunny-pump {
     --mulberry-16: rgba(27, 122, 58, 0.16);    /* secondary green shadow */
     --cerise-16:   rgba(47, 158, 68, 0.16);    /* accent green focus ring */
 
+    --color-divider: var(--eggplant);   
+
     /* ------------------------------------ */
     /* 1. General App Colors                */
     /* ------------------------------------ */

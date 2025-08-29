@@ -25,6 +25,9 @@ html.theme-dark {
     --mulberry-16: #000000;
     --cerise-16:   #000000;
 
+    /* Upper divider */
+    --color-divider: #000000;
+
     /* ------------------------------------ */
     /* 1. General App Colors                */
     /* ------------------------------------ */

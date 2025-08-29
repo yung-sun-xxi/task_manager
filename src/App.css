@@ -1,10 +1,20 @@
 /* src/App.css */
 .app-shell {
   display: flex;
-  flex-direction: row;
+  flex-direction: column; /* Изменяем на column для размещения навигации сверху */
   height: 100vh;
   overflow: hidden;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Новый контейнер для сайдбара и основного контента */
+.main-content-row {
+  display: flex;
+  flex-direction: row;
+  height: 100%; /* Занимает всю оставшуюся высоту */
+  overflow: hidden;
 }
 
 .sidebar {
@@ -282,8 +292,8 @@ input[type="number"] {
 }
 
 .tm-btn-icon {
-  width: 36px;               /* was 32px */
-  height: 36px;              /* was 32px */
+  width: 36px;
+  height: 36px;
   padding: 0;
   border-radius: 10px;
   font-size: 20px;
@@ -297,8 +307,8 @@ input[type="number"] {
   right: 12px;
   z-index: 110;
   padding: 0 12px;
-  height: 36px;              /* unify height with toolbar buttons */
-  border-radius: 8px;        /* same radius as events */
+  height: 36px;
+  border-radius: 8px;
   border: 1px solid var(--color-sidebar-button-border);
   background: var(--color-sidebar-button-bg);
   color: var(--color-sidebar-button-text);
@@ -314,7 +324,7 @@ input[type="number"] {
 /* ---- Theme chooser menu (appears on long press) ---- */
 .theme-menu {
   position: fixed;
-  top: 54px;                 /* 12(top) + 36(height) + 6(gap) */
+  top: 54px;
   right: 12px;
   z-index: 111;
   background: var(--color-task-card-bg);
@@ -348,4 +358,78 @@ input[type="number"] {
 /* visual highlight while dragging over an item */
 .theme-menu-item.is-hover {
   background: var(--hover-secondary-bg);
+}
+
+/* --- New styles for view switcher and Kanban board --- */
+.view-switcher-container {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  padding-bottom: 24px;
+  border-bottom: 3px solid var(--color-divider);
+  background: transparent;
+}
+
+.view-switcher-btn {
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid black;
+  background: transparent;
+  color: var(--color-sidebar-button-text);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.view-switcher-btn.is-active {
+  background: var(--color-sidebar-button-bg);
+  color: var(--color-sidebar-button-active-text);
+  border: 3px solid var(--color-sidebar-button-active-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Kanban board main container */
+.kanban-main {
+  padding: 12px;
+}
+
+.kanban-board-container {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+}
+
+.kanban-column {
+  flex: 0 0 300px;
+  background: var(--color-kanban-column-bg);
+  border-radius: 12px;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-column-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 12px;
+}
+
+.kanban-column-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kanban-column-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kanban-column .tm-task-item {
+  width: 100%;
 }
