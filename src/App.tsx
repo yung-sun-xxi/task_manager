@@ -27,30 +27,30 @@ function loadTasks(): Task[] {
   try {
     const raw = localStorage.getItem(LS_TASKS);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch { }
   return [];
 }
 function loadEvents(): PlainEvent[] {
   try {
     const raw = localStorage.getItem(LS_EVENTS);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch { }
   return [];
 }
 function saveTasks(tasks: Task[]) {
-  try { localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); } catch {}
+  try { localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); } catch { }
 }
 function saveEvents(events: PlainEvent[]) {
-  try { localStorage.setItem(LS_EVENTS, JSON.stringify(events)); } catch {}
+  try { localStorage.setItem(LS_EVENTS, JSON.stringify(events)); } catch { }
 }
 function genId(prefix: string) {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 // Now this function is not needed because we are using maxLength
 function truncateTitle(title: string): string {
-  if (title.length >50) {
-    return title.slice(0,47) + "...";
+  if (title.length > 50) {
+    return title.slice(0, 47) + "...";
   }
   return title;
 }
@@ -91,7 +91,7 @@ const App: React.FC = () => {
     // remove all theme-* classes first
     [...html.classList].forEach(c => { if (c.startsWith("theme-")) html.classList.remove(c); });
     html.classList.add(`theme-${theme}`);
-    try { localStorage.setItem(LS_THEME, theme); } catch {}
+    try { localStorage.setItem(LS_THEME, theme); } catch { }
   }, [theme]);
 
   // force refresh calendar after destructive ops
@@ -212,11 +212,11 @@ const App: React.FC = () => {
     // Create a new task and event linked to it
     const taskId = genId("task");
     const est = Math.max(0.25, (end.getTime() - start.getTime()) / 36e5);
-    const newTask: Task = { 
-      id: taskId, 
-      title: "New Task", 
-      description: "", 
-      estimateHours: Math.round(est * 4) / 4 
+    const newTask: Task = {
+      id: taskId,
+      title: "New Task",
+      description: "",
+      estimateHours: Math.round(est * 4) / 4
     };
     const newEvent: PlainEvent = {
       id: genId("ev"),
@@ -323,12 +323,12 @@ const App: React.FC = () => {
     setCalReset(n => n + 1);
     closeModal();
   }, [editingTaskId, tasks, events, closeModal]);
-  
+
   const handleDeleteAllTasks = useCallback(() => {
-      setTasks([]);
-      setEvents([]);
-      setStatuses([]);
-      setConfirmModalOpen(false);
+    setTasks([]);
+    setEvents([]);
+    setStatuses([]);
+    setConfirmModalOpen(false);
   }, []);
 
   /** Quick toggle on short click (cycles through THEMES) */
@@ -368,49 +368,9 @@ const App: React.FC = () => {
 
   return (
     <div className="app-shell">
-        <div className="top-right-actions">
-            <button
-                className="tm-btn tm-btn-danger"
-                onClick={() => setConfirmModalOpen(true)}
-            >
-                Delete All Tasks
-            </button>
-            {/* Theme toggle button */}
-            <button
-              className="theme-toggle-btn"
-              onClick={handleThemeClick}
-              onMouseDown={handlePressStart}
-              onMouseUp={handlePressEnd}
-              onMouseLeave={handlePressEnd}
-              onTouchStart={handlePressStart}
-              onTouchEnd={handlePressEnd}
-              aria-label="Toggle theme / open theme menu"
-              title="Click: switch theme • Hold: choose theme"
-              data-testid="theme-toggle"
-            >
-              {/* Simple label (you can customize per theme) */}
-              {theme === "light" ? "🌙 Dark" : "☀️ Light"}
-            </button>
-        </div>
-
-      {/* Theme menu */}
-      {menuOpen && (
-        <div className="theme-menu" role="menu" aria-label="Choose theme">
-          {THEMES.map(t => (
-            <button
-              key={t.id}
-              className={`theme-menu-item ${theme === t.id ? "is-active" : ""}`}
-              data-themeid={t.id}
-              onClick={() => applyTheme(t.id)}  // keep click as fallback
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Navigation buttons to switch views */}
       <div className="view-switcher-container">
+        {/* Кнопки навигации - теперь они прямые потомки и gap будет работать */}
         <button
           className={`view-switcher-btn ${currentPage === "calendar" ? "is-active" : ""}`}
           onClick={() => setCurrentPage("calendar")}
@@ -423,8 +383,36 @@ const App: React.FC = () => {
         >
           Kanban Board
         </button>
+        
+        {/* Центральная часть: кнопка удаления */}
+        <div className="center-actions">
+          <button
+            className="tm-btn tm-btn-danger"
+            onClick={() => setConfirmModalOpen(true)}
+          >
+            Delete All Tasks
+          </button>
+        </div>
+
+        {/* Правая часть: кнопка переключения темы */}
+        <div className="right-actions">
+          <button
+            className="theme-toggle-btn"
+            onClick={handleThemeClick}
+            onMouseDown={handlePressStart}
+            onMouseUp={handlePressEnd}
+            onMouseLeave={handlePressEnd}
+            onTouchStart={handlePressStart}
+            onTouchEnd={handlePressEnd}
+            aria-label="Toggle theme / open theme menu"
+            title="Click: switch theme • Hold: choose theme"
+            data-testid="theme-toggle"
+          >
+            {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+          </button>
+        </div>
       </div>
-      
+
       {/* Main content area below the view switcher */}
       <div className="main-content-row">
         {currentPage === "calendar" && (
@@ -445,7 +433,7 @@ const App: React.FC = () => {
                 key={calReset}
                 events={events}
                 onEventsChange={handleCalendarEventsChange}
-                tasksById={new Map(tasks.map(t => [t.id, t]))}
+                tasksById={new Map(tasks.map(t => [id, t]))}
                 onCreateBySelect={handleCreateBySelect}
                 onEventDblClick={handleEventDblClick}
               />
@@ -549,29 +537,29 @@ const App: React.FC = () => {
 
       {/* Confirmation modal for "Delete All Tasks" */}
       {isConfirmModalOpen && (
-          <div
-              className="tm-modal-overlay"
-              onMouseDown={(e) => e.stopPropagation()}
-          >
-              <div className="tm-modal">
-                  <h2 className="tm-modal-title">Confirm Deletion</h2>
-                  <p>Are you sure you want to delete all tasks? This action cannot be undone.</p>
-                  <div className="tm-modal-actions">
-                      <button
-                          className="tm-btn tm-btn-danger"
-                          onClick={handleDeleteAllTasks}
-                      >
-                          Yes, Delete All
-                      </button>
-                      <button
-                          className="tm-btn"
-                          onClick={() => setConfirmModalOpen(false)}
-                      >
-                          Cancel
-                      </button>
-                  </div>
-              </div>
+        <div
+          className="tm-modal-overlay"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <div className="tm-modal">
+            <h2 className="tm-modal-title">Confirm Deletion</h2>
+            <p>Are you sure you want to delete all tasks? This action cannot be undone.</p>
+            <div className="tm-modal-actions">
+              <button
+                className="tm-btn tm-btn-danger"
+                onClick={handleDeleteAllTasks}
+              >
+                Yes, Delete All
+              </button>
+              <button
+                className="tm-btn"
+                onClick={() => setConfirmModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
+        </div>
       )}
     </div>
   );

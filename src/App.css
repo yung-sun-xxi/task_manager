@@ -356,14 +356,30 @@ input[type="number"] {
   background: var(--hover-secondary-bg);
 }
 
-/* --- New styles for view switcher and Kanban board --- */
 .view-switcher-container {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  justify-content: space-between; /* Распределяет элементы по краям */
+  align-items: center; /* Выравнивает элементы по центру по вертикали */
   padding: 12px;
   padding-bottom: 24px;
   border-bottom: 3px solid var(--color-divider);
   background: transparent;
+}
+
+/* Контейнер для центрирования кнопки */
+.center-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1; /* Позволяет этому блоку растягиваться и толкать другие элементы */
+}
+
+/* Контейнер для кнопки темы */
+.right-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .view-switcher-btn {
