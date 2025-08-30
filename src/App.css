@@ -458,3 +458,20 @@ input[type="number"] {
 .tm-btn-danger {
     /* стили для красной кнопки */
 }
+
+/* Добавь в App.css */
+.kanban-drop-indicator {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--color-sidebar-button-active-text);
+  margin: 6px 0;
+}
+.kanban-empty { padding: 8px 0 4px; opacity: 0.7; }
+.kanban-empty-hint { padding: 6px 8px; border: 1px dashed var(--color-border); border-radius: 8px; text-align: center; }
+.kanban-bottom-dropzone { height: 12px; } /* «якорь» для дропа в конец */
+
+.left-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;   /* <-- вот это расстояние между Calendar и Kanban */
+}

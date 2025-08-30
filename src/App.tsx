@@ -216,7 +216,8 @@ const App: React.FC = () => {
       id: taskId,
       title: "New Task",
       description: "",
-      estimateHours: Math.round(est * 4) / 4
+      estimateHours: Math.round(est * 4) / 4,
+      status: (statuses && statuses.length ? statuses[0] : "") // default status for new task
     };
     const newEvent: PlainEvent = {
       id: genId("ev"),
@@ -227,7 +228,7 @@ const App: React.FC = () => {
     };
     setTasks(prev => [newTask, ...prev]);
     setEvents(prev => [...prev, newEvent]);
-  }, []);
+  }, [statuses]);
 
   const handleEventDblClick = useCallback((taskId?: string) => {
     if (!taskId) return;
@@ -244,15 +245,22 @@ const App: React.FC = () => {
   const openNewTaskModal = useCallback(() => {
     // Create a placeholder task and open the same modal for editing
     const id = genId('task');
-    const newTask = { id, title: "", description: "", estimateHours: 0 } as Task;
+    const newTask = {
+      id,
+      title: "",
+      description: "",
+      estimateHours: 0,
+      status: (statuses && statuses.length ? statuses[0] : "")
+    } as Task;
     setTasks(prev => [newTask, ...prev]);
     setEditingTaskId(id);
     setDraftTitle("");
     setDraftDescription("");
     setDraftEstimate(0);
+    setDraftStatus(newTask.status || "");
     setPendingNewTaskId(id);
     setTaskModalOpen(true);
-  }, []);
+  }, [statuses]);
 
   // modal actions
   const closeModal = useCallback(() => {
@@ -366,25 +374,90 @@ const App: React.FC = () => {
     setMenuOpen(false);
   }, []);
 
+  /*** NEW: Kanban drop handler — reorder within column & move across statuses ***/
+  const handleKanbanDrop = useCallback((payload: {
+    taskId: string;
+    fromStatus: string;
+    fromIndex: number;
+    toStatus: string;
+    toIndex: number;
+  }) => {
+    setTasks((prev) => {
+      // Group tasks by status preserving order
+      const byStatus: Record<string, Task[]> = {};
+      statuses.forEach((s) => (byStatus[s] = []));
+      for (const t of prev) {
+        const s = (t as any).status ?? (statuses[0] || "");
+        (byStatus[s] ?? (byStatus[s] = [])).push(t);
+      }
+
+      const { taskId, fromStatus, fromIndex, toStatus } = payload;
+      let { toIndex } = payload;
+
+      const srcList = byStatus[fromStatus] ?? [];
+      const dstList = byStatus[toStatus] ?? [];
+
+      // Find the moving task and remove from source
+      let moving = srcList[fromIndex];
+      if (!moving || moving.id !== taskId) {
+        const idx = srcList.findIndex((x) => x.id === taskId);
+        if (idx === -1) return prev; // nothing to do
+        moving = srcList[idx];
+        srcList.splice(idx, 1);
+      } else {
+        srcList.splice(fromIndex, 1);
+      }
+
+      // Clamp destination index
+      if (fromStatus === toStatus) {
+        if (toIndex > srcList.length) toIndex = srcList.length;
+      } else {
+        if (toIndex > dstList.length) toIndex = dstList.length;
+      }
+
+      const updated: Task = { ...moving, status: toStatus };
+      dstList.splice(toIndex, 0, updated);
+
+      // Stitch back into a single array following statuses order
+      const next: Task[] = [];
+      for (const s of statuses) {
+        const list = byStatus[s] ?? [];
+        for (const t of list) next.push(t);
+      }
+
+      return next;
+    });
+  }, [statuses]);
+
+  /*** Soft-migrate old tasks that might not have a status ***/
+  useEffect(() => {
+    if (!statuses?.length) return;
+    setTasks((prev) =>
+      prev.map((t) => (t.status ? t : { ...t, status: statuses[0] }))
+    );
+  }, [statuses]);
+
   return (
     <div className="app-shell">
       {/* Navigation buttons to switch views */}
       <div className="view-switcher-container">
-        {/* Кнопки навигации - теперь они прямые потомки и gap будет работать */}
-        <button
-          className={`view-switcher-btn ${currentPage === "calendar" ? "is-active" : ""}`}
-          onClick={() => setCurrentPage("calendar")}
-        >
-          Calendar
-        </button>
-        <button
-          className={`view-switcher-btn ${currentPage === "kanban" ? "is-active" : ""}`}
-          onClick={() => setCurrentPage("kanban")}
-        >
-          Kanban Board
-        </button>
-        
-        {/* Центральная часть: кнопка удаления */}
+        {/* ЛЕВАЯ ГРУППА: две кнопки вместе */}
+        <div className="left-actions">
+          <button
+            className={`view-switcher-btn ${currentPage === "calendar" ? "is-active" : ""}`}
+            onClick={() => setCurrentPage("calendar")}
+          >
+            Calendar
+          </button>
+          <button
+            className={`view-switcher-btn ${currentPage === "kanban" ? "is-active" : ""}`}
+            onClick={() => setCurrentPage("kanban")}
+          >
+            Kanban Board
+          </button>
+        </div>
+
+        {/* ЦЕНТР */}
         <div className="center-actions">
           <button
             className="tm-btn tm-btn-danger"
@@ -433,14 +506,14 @@ const App: React.FC = () => {
                 key={calReset}
                 events={events}
                 onEventsChange={handleCalendarEventsChange}
-                tasksById={new Map(tasks.map(t => [id, t]))}
+                tasksById={new Map(tasks.map(t => [t.id, t]))}
                 onCreateBySelect={handleCreateBySelect}
                 onEventDblClick={handleEventDblClick}
               />
             </div>
           </>
         )}
-
+         
         {currentPage === "kanban" && (
           <div className="main kanban-main">
             <KanbanBoard
@@ -449,6 +522,7 @@ const App: React.FC = () => {
               onTaskDblClick={handleEventDblClick}
               statuses={statuses}
               onAddTask={openNewTaskModal}
+              onDropTask={handleKanbanDrop}
             />
           </div>
         )}

@@ -3,3 +3,7 @@
 /* Import all themes here */
 @import "./theme-light.css";
 @import "./theme-dark.css";
+@import "./theme-light.css";
+@import "./theme-eminence_ash.css";
+@import "./myst_coral-light.css";
+@import "./tea_tyrian-light.css";
