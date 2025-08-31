@@ -475,3 +475,17 @@ input[type="number"] {
   align-items: center;
   gap: 8px;   /* <-- вот это расстояние между Calendar и Kanban */
 }
+
+/* Добавьте это */
+.kanban-column-tasks .tm-task-item {
+  width: auto; /* или любое другое фиксированное значение, если нужно */
+  max-width: 100%; /* чтобы не вылезло за пределы колонки */
+}
+
+/* И добавьте это для фикса ширины при драгге */
+.tm-task-item.dragging {
+  width: calc(100% - 24px); /* или любое другое значение, соответствующее padding колонки */
+  max-width: 250px; /* или любая другая ширина карточки */
+  position: fixed;
+  z-index: 1000;
+}

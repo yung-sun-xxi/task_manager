@@ -1,5 +1,5 @@
 // src/components/KanbanBoard.tsx
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState } from "react";
 import { Task } from "./Sidebar";
 
 type Props = {
@@ -23,9 +23,6 @@ type DragPayload = {
   fromIndex: number;
 };
 
-const MIME1 = "application/x-task";
-const MIME2 = "text/plain";
-
 const KanbanBoard: React.FC<Props> = ({
   tasks,
   allocations,
@@ -38,211 +35,162 @@ const KanbanBoard: React.FC<Props> = ({
     const map: Record<string, Task[]> = {};
     statuses.forEach((s) => (map[s] = []));
     for (const t of tasks) {
-      const s = (t as any).status ?? statuses[0];
+      const s = t.status ?? statuses[0];
       (map[s] ?? (map[s] = [])).push(t);
     }
     return map;
   }, [tasks, statuses]);
 
+  const [dragging, setDragging] = useState<DragPayload | null>(null);
   const [hoverGuide, setHoverGuide] = useState<{
     status: string;
     index: number;
     position: "before" | "after";
   } | null>(null);
 
-  const clearHover = () => setHoverGuide(null);
-
-  // Payload data is now stored only in dataTransfer. No refs needed.
-  // This simplifies the logic and makes it more reliable.
-
-  const handleCardDragStart = (
-    e: React.DragEvent,
+  const handlePointerDown = (
+    e: React.PointerEvent,
     status: string,
     index: number,
     taskId: string
   ) => {
-    console.debug("dragstart triggered", { taskId, status, index });
-    try {
-      e.dataTransfer.setData(MIME1, JSON.stringify({ taskId, fromStatus: status, fromIndex: index }));
-      e.dataTransfer.setData(MIME2, JSON.stringify({ taskId, fromStatus: status, fromIndex: index }));
-    } catch (err) {
-      console.error("Failed to set drag data", err);
-    }
-    e.dataTransfer.effectAllowed = "move";
+    const payload: DragPayload = { taskId, fromStatus: status, fromIndex: index };
+    setDragging(payload);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const taskEl = document.getElementById(`task-${taskId}`);
+    if (taskEl) taskEl.classList.add('dragging');
   };
 
-  const getDragData = (e: React.DragEvent): DragPayload | null => {
-    try {
-      const a = e.dataTransfer.getData(MIME1);
-      if (a) return JSON.parse(a);
-      const b = e.dataTransfer.getData(MIME2);
-      if (b) return JSON.parse(b);
-    } catch (err) {
-      console.error("Failed to get drag data", err);
-    }
-    return null;
-  };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragging) return;
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    try { e.dataTransfer.dropEffect = "move"; } catch {}
-  };
+    const taskEl = document.getElementById(`task-${dragging.taskId}`);
+    if (!taskEl) return;
 
-  // NEW: The core drop logic is here, but it also gets triggered by handleDrop events.
-  const handleDrop = (e: React.DragEvent, toStatus: string, toIndex: number) => {
-    console.debug("Drop event triggered", { toStatus, toIndex });
-    e.preventDefault();
-    const data = getDragData(e);
-    if (!data || !onDropTask) {
-      console.debug("No valid data or onDropTask missing.");
-      return;
-    }
-    
-    // Check if we are dropping on the same card, which is an invalid operation
-    if (data.taskId === tasksByStatus[toStatus]?.[toIndex]?.id) {
-        console.debug("Dropping on the same card, skipping.");
+    const rect = taskEl.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    taskEl.style.position = "fixed";
+    taskEl.style.left = `${x - rect.width / 2}px`;
+    taskEl.style.top = `${y - rect.height / 2}px`;
+    taskEl.style.zIndex = "1000";
+
+    const columnEls = document.querySelectorAll(".kanban-column");
+    for (const columnEl of columnEls) {
+      const columnRect = columnEl.getBoundingClientRect();
+      if (x >= columnRect.left && x <= columnRect.right && y >= columnRect.top && y <= columnRect.bottom) {
+        const taskEls = columnEl.querySelectorAll(".tm-task-item");
+        for (let i = 0; i < taskEls.length; i++) {
+          const taskRect = taskEls[i].getBoundingClientRect();
+          if (y < taskRect.top + (taskRect.height / 2)) {
+            setHoverGuide({ status: columnEl.getAttribute("data-status")!, index: i, position: "before" });
+            return;
+          }
+        }
+        setHoverGuide({ status: columnEl.getAttribute("data-status")!, index: taskEls.length, position: "after" });
         return;
+      }
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!dragging) return;
+
+    const taskEl = document.getElementById(`task-${dragging.taskId}`);
+    if (taskEl) {
+      taskEl.style.position = "";
+      taskEl.style.left = "";
+      taskEl.style.top = "";
+      taskEl.style.zIndex = "";
+      taskEl.classList.remove('dragging');
     }
 
-    onDropTask({
-      taskId: data.taskId,
-      fromStatus: data.fromStatus,
-      fromIndex: data.fromIndex,
-      toStatus,
-      toIndex,
-    });
+    if (hoverGuide) {
+      onDropTask?.({
+        taskId: dragging.taskId,
+        fromStatus: dragging.fromStatus,
+        fromIndex: dragging.fromIndex,
+        toStatus: hoverGuide.status,
+        toIndex: hoverGuide.index + (hoverGuide.position === "after" ? 1 : 0),
+      });
+    }
 
-    clearHover();
+    setDragging(null);
+    setHoverGuide(null);
   };
-
-  const handleCardDragOver = (e: React.DragEvent, status: string, index: number) => {
-    handleDragOver(e);
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const position: "before" | "after" = y < rect.height / 2 ? "before" : "after";
-    setHoverGuide((prev) =>
-      prev &&
-      prev.status === status &&
-      prev.index === index &&
-      prev.position === position
-        ? prev
-        : { status, index, position }
-    );
-  };
-  
-  // This is the only onDrop handler. The other drop targets call this with calculated indices.
-  const handleCardDrop = (e: React.DragEvent, status: string, index: number) => {
-      const pos = hoverGuide?.position ?? "after";
-      const toIndex = index + (pos === "after" ? 1 : 0);
-      handleDrop(e, status, toIndex);
-  }
-
-  // Column drop handler: drop at the end of the column
-  const handleColumnDrop = (e: React.DragEvent, status: string) => {
-      const toIndex = tasksByStatus[status]?.length ?? 0;
-      handleDrop(e, status, toIndex);
-  }
 
   return (
-    <div className="kanban-board-container" onDragOver={handleDragOver}>
+    <div
+      className="kanban-board-container"
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
       {statuses.map((status) => {
         const list = tasksByStatus[status] ?? [];
+
+        // Only render the column if there are tasks or it's the first status (for new tasks without status)
+        if (list.length === 0 && status !== statuses[0]) return null;
 
         return (
           <div
             key={status}
             className="kanban-column"
-            onDragOver={(e) => handleDragOver(e)}
-            onDrop={(e) => handleColumnDrop(e, status)}
+            data-status={status}
           >
             <div className="kanban-column-header">
               <h3>{status}</h3>
             </div>
 
-            <div
-              className="kanban-column-tasks"
-              onDragOver={(e) => handleDragOver(e)}
-              onDrop={(e) => handleColumnDrop(e, status)}
-            >
-              {list.length === 0 && (
-                <div className="kanban-empty">
-                  {onAddTask ? (
-                    <button className="tm-btn tm-btn-ghost" onClick={onAddTask}>
-                      + Add task
-                    </button>
-                  ) : (
-                    <div className="kanban-empty-hint">Drop here</div>
-                  )}
-                </div>
-              )}
-
+            <div className="kanban-column-tasks">
               {list.map((t, i) => {
-                const planned = allocations[t.id] ?? 0;
-                let pct = 0;
-                let barColor = "var(--color-border)";
-                if (t.estimateHours && t.estimateHours > 0) {
-                  pct = Math.min(100, Math.round((planned / t.estimateHours) * 100));
-                  if (pct <= 33) barColor = "var(--mulberry-40)";
-                  else if (pct <= 66) barColor = "var(--mulberry-60)";
-                  else barColor = "var(--mulberry-80)";
-                }
+                const planned = allocations[t.id] || 0;
+                const ratio = t.estimateHours > 0 ? planned / t.estimateHours : 0;
 
-                const showBefore =
-                  hoverGuide &&
-                  hoverGuide.status === status &&
-                  hoverGuide.index === i &&
-                  hoverGuide.position === "before";
-                const showAfter =
-                  hoverGuide &&
-                  hoverGuide.status === status &&
-                  hoverGuide.index === i &&
-                  hoverGuide.position === "after";
+                let barColor = "#2FBF71"; 
+                if (t.estimateHours > 0) {
+                  if (ratio <= 1.0) {
+                    barColor = "#2FBF71"; 
+                  } else if (ratio <= 1.5) {
+                    barColor = "#F9A03F"; 
+                  } else if (ratio <= 2.0) {
+                    barColor = "#D45113"; 
+                  } else if (ratio <= 3.0) {
+                    barColor = "#EB3333"; 
+                  } else {
+                    barColor = "#820D0D"; 
+                  }
+                }
 
                 return (
                   <div
                     key={t.id}
+                    id={`task-${t.id}`}
                     className="tm-task-item"
-                    draggable
-                    onDragStart={(e) => handleCardDragStart(e, status, i, t.id)}
-                    onDragOver={(e) => handleCardDragOver(e, status, i)}
-                    onDrop={(e) => handleCardDrop(e, status, i)}
-                    onDragEnd={clearHover} // On drag end, just clear the hover guide
+                    onPointerDown={(e) => handlePointerDown(e, status, i, t.id)}
                     onDoubleClick={() => onTaskDblClick?.(t.id)}
                   >
-                    {showBefore && <div className="kanban-drop-indicator" />}
-
                     <div className="task-header">
                       <div className="task-title">{t.title}</div>
-                      {typeof t.estimateHours === "number" && (
-                        <div className="task-hours">{t.estimateHours}h</div>
-                      )}
                     </div>
-
                     {t.description && <div className="task-desc">{t.description}</div>}
-
                     <div className="task-bar-row">
                       <div className="task-bar-container">
                         <div
                           className="task-bar-fill"
-                          style={{ width: `${pct}%`, background: barColor }}
-                        />
+                          style={{
+                            width: `${Math.min(100, ratio * 100)}%`,
+                            backgroundColor: barColor,
+                          }}
+                        ></div>
                       </div>
                       <div className="task-bar-label">
-                        {planned} / {t.estimateHours ?? 0} hr
+                        {planned} / {t.estimateHours} hr
                       </div>
                     </div>
-
-                    {showAfter && <div className="kanban-drop-indicator" />}
                   </div>
                 );
               })}
-
-              {/* якорь внизу — гарантированный дроп «в конец» */}
-              <div
-                className="kanban-bottom-dropzone"
-                onDragOver={(e) => handleDragOver(e)}
-                onDrop={(e) => handleColumnDrop(e, status)}
-              />
             </div>
           </div>
         );

@@ -1,6 +1,6 @@
-/* src/components/CalendarView.tsx */
+// src/components/CalendarView.tsx
 import React, { useCallback, useRef, useEffect } from "react";
-import FullCalendar from "@fullcalendar/react";
+
 import type {
   DateSelectArg,
   EventAddArg,
@@ -8,11 +8,12 @@ import type {
   EventChangeArg,
   EventInput,
   EventRemoveArg,
-  EventMountArg
+  EventMountArg,
 } from "@fullcalendar/core";
 import type { EventReceiveArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import FullCalendar from "@fullcalendar/react";
 
 export type PlainEvent = {
   id: string;
@@ -32,43 +33,41 @@ type Props = {
   tasksById: Map<string, { title: string; color?: string }>;
 };
 
-// Функция throttle для оптимизации производительности
+const genId = (prefix: string) => {
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+};
+
+// throttle для ресайза
 const throttle = (func: Function, delay: number) => {
-    let inThrottle: boolean;
-    return (...args: any[]) => {
-        if (!inThrottle) {
-            func(...args);
-            inThrottle = true;
-            setTimeout(() => {
-                inThrottle = false;
-            }, delay);
-        }
-    };
+  let inThrottle = false;
+  return (...args: any[]) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, delay);
+    }
+  };
 };
 
 const CalendarView: React.FC<Props> = (props) => {
   const calRef = useRef<FullCalendar | null>(null);
 
-  // Обработчик изменения размера окна с throttle
+  // Поддерживаем корректную верстку при ресайзе
   useEffect(() => {
     const handleResize = () => {
-      const api = calRef.current?.getApi();
-      if (api) {
-        api.updateSize();
-      }
+      const api = (calRef.current as any)?.getApi?.();
+      if (api) api.updateSize();
     };
-    
-    // Задержка в 50 миллисекунд
-    const throttledHandleResize = throttle(handleResize, 50);
-
-    window.addEventListener("resize", throttledHandleResize);
-    return () => {
-      window.removeEventListener("resize", throttledHandleResize);
-    };
+    const throttled = throttle(handleResize, 50);
+    window.addEventListener("resize", throttled);
+    return () => window.removeEventListener("resize", throttled);
   }, []);
 
+  // Снять все события из календаря и протолкнуть наверх
   const pushAllEvents = useCallback(() => {
-    const api = (calRef.current as any)?.getApi?.() as any;
+    const api = (calRef.current as any)?.getApi?.();
     if (!api) return;
     const all: EventApi[] = api.getEvents();
     const data: PlainEvent[] = all.map((e) => ({
@@ -76,33 +75,56 @@ const CalendarView: React.FC<Props> = (props) => {
       title: e.title,
       start: e.start!,
       end: e.end!,
-      taskId: (e.extendedProps as any).taskId,
+      taskId: (e.extendedProps as any)?.taskId,
       backgroundColor: (e as any).backgroundColor,
       borderColor: (e as any).borderColor,
     }));
     props.onEventsChange(data);
   }, [props]);
 
-  const handleSelect = useCallback((arg: DateSelectArg) => {
-    props.onCreateBySelect(arg.start, arg.end);
-  }, [props]);
+  // Создание событий выделением на гриде — теперь только дергаем модалку и снимаем выделение
+  const handleSelect = useCallback(
+    (arg: DateSelectArg) => {
+      props.onCreateBySelect(arg.start, arg.end);
+      // снять синюю выделенную область, чтобы не оставалась после открытия модалки
+      (calRef.current as any)?.getApi?.().unselect?.();
+    },
+    [props]
+  );
 
-  const eventDidMount = useCallback((arg: EventMountArg) => {
-    const ext = (arg.event as any).extendedProps || (arg.event as any)._def?.extendedProps || {};
-    const taskId = (ext as any).taskId as string | undefined;
+  // Двойной клик по ПУСТОЙ ячейке календаря — открываем модалку создания
+  const handleDateClick = useCallback(
+    (info: any) => {
+      if (info?.jsEvent?.detail === 2) {
+        const start: Date = info.date;
+        const end = new Date(start);
+        end.setMinutes(end.getMinutes() + 15);
+        props.onCreateBySelect(start, end);
+        (calRef.current as any)?.getApi?.().unselect?.();
+      }
+    },
+    [props]
+  );
 
-    // Attach a dblclick listener to open modal
-    const handler = (e: MouseEvent) => {
-      // Don't let FullCalendar consume this dblclick
-      e.stopPropagation();
-      props.onEventDblClick(taskId);
-    };
-    arg.el.addEventListener("dblclick", handler);
-    return () => {
-      arg.el.removeEventListener("dblclick", handler);
-    };
-  }, [props]);
+  // Двойной клик по СОБЫТИЮ — открыть карточку задачи
+  const eventDidMount = useCallback(
+    (arg: EventMountArg) => {
+      const ext = (arg.event as any).extendedProps || (arg.event as any)._def?.extendedProps || {};
+      const taskId = (ext as any).taskId as string | undefined;
 
+      const handler = (e: MouseEvent) => {
+        e.stopPropagation();
+        props.onEventDblClick(taskId);
+      };
+      arg.el.addEventListener("dblclick", handler);
+      return () => {
+        arg.el.removeEventListener("dblclick", handler);
+      };
+    },
+    [props]
+  );
+
+  // Любые изменения — синхронизируем стейт вверх
   const handleEventAdd = useCallback((_arg: EventAddArg) => {
     pushAllEvents();
   }, [pushAllEvents]);
@@ -115,22 +137,30 @@ const CalendarView: React.FC<Props> = (props) => {
     pushAllEvents();
   }, [pushAllEvents]);
 
-  const handleEventReceive = useCallback((arg: EventReceiveArg) => {
-    // When dropping from sidebar, the element carries dataset
-    const el = arg.draggedEl as HTMLElement;
-    const taskId = el?.getAttribute?.("data-task-id") || (arg.event.extendedProps as any).taskId;
-    const title = el?.getAttribute?.("data-title") || arg.event.title;
-    const tColor = el?.getAttribute?.("data-color") || "";
-    if (taskId) arg.event.setExtendedProp("taskId", taskId);
-    if (title) arg.event.setProp("title", title);
-    if (tColor) {
-      (arg.event as any).setProp("backgroundColor", tColor);
-    }
-    pushAllEvents();
-  }, [pushAllEvents]);
+  // Внешний дроп из Sidebar через FullCalendar.Draggable — событие уже создано
+  const handleEventReceive = useCallback(
+    (arg: EventReceiveArg) => {
+      const e = arg.event;
 
-  // Convert incoming PlainEvent[] to FullCalendar EventInput[]
-  const fcEvents: EventInput[] = props.events.map(ev => ({
+      // Если duration не задан — зададим 15 минут
+      if (e.start && !e.end) {
+        const end = new Date(e.start);
+        end.setMinutes(end.getMinutes() + 15);
+        e.setEnd(end);
+      }
+
+      // Если нет id — проставим свой
+      if (!e.id) {
+        e.setProp("id", genId("ev"));
+      }
+
+      pushAllEvents();
+    },
+    [pushAllEvents]
+  );
+
+  // Преобразование входящих PlainEvent → EventInput
+  const fcEvents: EventInput[] = props.events.map((ev) => ({
     id: ev.id,
     title: ev.title,
     start: ev.start,
@@ -148,6 +178,7 @@ const CalendarView: React.FC<Props> = (props) => {
         initialView="timeGridWeek"
         slotDuration="00:15:00"
         snapDuration="00:15:00"
+        defaultTimedEventDuration="00:15:00"
         selectable={true}
         selectMirror={true}
         nowIndicator={false}
@@ -159,22 +190,22 @@ const CalendarView: React.FC<Props> = (props) => {
         slotMaxTime="21:15:00"
         slotLabelInterval="01:00"
         slotLabelFormat={{
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
         }}
         dayHeaderFormat={{
-          weekday: 'short',
-          day: '2-digit',
-          month: '2-digit'
+          weekday: "short",
+          day: "2-digit",
+          month: "2-digit",
         }}
         customButtons={{
           Today: {
-            text: 'Today',
+            text: "Today",
             click: () => {
               (calRef.current as any)?.getApi().today();
-            }
-          }
+            },
+          },
         }}
         headerToolbar={{
           left: "prev,next Today",
@@ -183,10 +214,11 @@ const CalendarView: React.FC<Props> = (props) => {
         }}
         events={fcEvents}
         select={handleSelect}
+        dateClick={handleDateClick}    // ← двойной клик по пустому месту
         eventAdd={handleEventAdd}
         eventChange={handleEventChange}
         eventRemove={handleEventRemove}
-        eventReceive={handleEventReceive}
+        eventReceive={handleEventReceive}   // ← внешний DnD из Sidebar
         eventDidMount={eventDidMount}
         height="100%"
         themeSystem="bootstrap5"

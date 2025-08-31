@@ -5,7 +5,7 @@ import CalendarView, { PlainEvent } from "./components/CalendarView";
 import KanbanBoard from "./components/KanbanBoard";
 import "./index.css";
 import "./App.css";
-import { loadStatuses, saveStatuses } from './utils/store';
+import { loadStatuses } from "./utils/store";
 
 /** Theme files */
 import "./themes/theme-light.css";
@@ -15,6 +15,7 @@ import "./themes/theme-sunny-pump.css";
 const LS_TASKS = "tm_tasks_v1";
 const LS_EVENTS = "tm_events_v1";
 const LS_THEME = "tm_theme_v1";
+const LS_STATUSES = "tm.statuses.v1";
 
 /** Register available themes (id matches the suffix in html.theme-<id>) */
 const THEMES = [
@@ -22,6 +23,12 @@ const THEMES = [
   { id: "dark", label: "Dark (all black)" },
   { id: "sunny-pump", label: "Sunny Pump" },
 ];
+
+const saveStatuses = (arr: string[]) => {
+  try {
+    localStorage.setItem(LS_STATUSES, JSON.stringify(arr));
+  } catch {}
+};
 
 function loadTasks(): Task[] {
   try {
@@ -58,7 +65,15 @@ function truncateTitle(title: string): string {
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [events, setEvents] = useState<PlainEvent[]>(() => loadEvents());
-  const [statuses, setStatuses] = useState<string[]>(() => loadStatuses());
+  const [statuses, setStatuses] = useState<string[]>(() => {
+    const fromLs = loadStatuses();
+    if (fromLs.length) return fromLs;
+    return Array.from(new Set(
+      (Array.isArray(tasks) ? tasks : [])
+        .map(t => (t.status || "").trim())
+        .filter(s => s.length > 0)
+    ));
+  });
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
   // new state to manage which view is active
@@ -100,10 +115,38 @@ const App: React.FC = () => {
   // sidebar resize state
   const [sidebarWidth, setSidebarWidth] = useState(288);
 
-  // persist
+  // слот, который юзер выделил на календаре (или двойной клик)
+  const [pendingSlot, setPendingSlot] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null,
+  });
+
+  // режим создания (когда открываем модалку БЕЗ существующей задачи)
+  const [isCreating, setIsCreating] = useState(false);
+
+  // persist tasks/events как раньше
   useEffect(() => saveTasks(tasks), [tasks]);
   useEffect(() => saveEvents(events), [events]);
-  useEffect(() => saveStatuses(statuses), [statuses]);
+
+  // пересчёт и сохранение статусов КАЖДЫЙ раз при изменении задач
+  useEffect(() => {
+    const next = Array.from(
+      new Set(
+        tasks
+          .map(t => (t.status || "").trim())
+          .filter(s => s.length > 0)
+      )
+    );
+
+    setStatuses(prev => {
+      const same = prev.length === next.length && prev.every((v, i) => v === next[i]);
+      if (!same) {
+        saveStatuses(next);   // <-- сюда летит уже пересчитанный массив
+        return next;
+      }
+      return prev;
+    });
+  }, [tasks]);
 
   // keep modal draft in sync with actual task while open
   useEffect(() => {
@@ -209,26 +252,21 @@ const App: React.FC = () => {
   }, []);
 
   const handleCreateBySelect = useCallback((start: Date, end: Date) => {
-    // Create a new task and event linked to it
-    const taskId = genId("task");
-    const est = Math.max(0.25, (end.getTime() - start.getTime()) / 36e5);
-    const newTask: Task = {
-      id: taskId,
-      title: "New Task",
-      description: "",
-      estimateHours: Math.round(est * 4) / 4,
-      status: (statuses && statuses.length ? statuses[0] : "") // default status for new task
-    };
-    const newEvent: PlainEvent = {
-      id: genId("ev"),
-      title: newTask.title,
-      start: start.toISOString(),
-      end: end.toISOString(),
-      taskId,
-    };
-    setTasks(prev => [newTask, ...prev]);
-    setEvents(prev => [...prev, newEvent]);
-  }, [statuses]);
+    // НЕ создаём задачу/событие!
+    setPendingSlot({ start, end });
+
+    // входим в режим создания
+    setIsCreating(true);
+    setEditingTaskId(null);
+
+    // пустые драфты
+    setDraftTitle("");
+    setDraftDescription("");
+    setDraftEstimate(0);
+    setDraftStatus("");
+
+    setTaskModalOpen(true);
+  }, []);
 
   const handleEventDblClick = useCallback((taskId?: string) => {
     if (!taskId) return;
@@ -250,66 +288,124 @@ const App: React.FC = () => {
       title: "",
       description: "",
       estimateHours: 0,
-      status: (statuses && statuses.length ? statuses[0] : "")
+      status: ""
     } as Task;
     setTasks(prev => [newTask, ...prev]);
     setEditingTaskId(id);
     setDraftTitle("");
     setDraftDescription("");
     setDraftEstimate(0);
-    setDraftStatus(newTask.status || "");
+    setDraftStatus("");
     setPendingNewTaskId(id);
     setTaskModalOpen(true);
   }, [statuses]);
 
   // modal actions
   const closeModal = useCallback(() => {
-    // If we created a new empty task and the user cancelled, remove it
-    if (pendingNewTaskId && editingTaskId === pendingNewTaskId) {
-      setTasks(prev => prev.filter(t => t.id !== pendingNewTaskId));
-      setPendingNewTaskId(null);
-    }
     setTaskModalOpen(false);
     setEditingTaskId(null);
-  }, [pendingNewTaskId, editingTaskId]);
+    setIsCreating(false);
+    setPendingSlot({ start: null, end: null });
+  }, []);
 
-  const saveModal = useCallback(() => {
-    if (!editingTaskId) return;
-    const title = draftTitle.trim();
-    if (!title) {
-      // Remove the pending task if the title is empty and the user tries to save
-      if (pendingNewTaskId === editingTaskId) {
-        setTasks(prev => prev.filter(t => t.id !== pendingNewTaskId));
-        setPendingNewTaskId(null);
-      }
-      closeModal();
-      return;
+const saveModal = useCallback(() => {
+  const title = draftTitle.trim();
+  const description = draftDescription.trim();
+  const estimate = Math.max(0, Math.round(Number(draftEstimate) * 4) / 4);
+  const status = (draftStatus || "").trim();
+
+  // Title обязателен — без него просто закрываем без создания/сохранения
+  if (!title) {
+    // для обратной совместимости: если где-то раньше была создана "pending" задача — подчистим
+    if (typeof pendingNewTaskId !== "undefined" && pendingNewTaskId && editingTaskId === pendingNewTaskId) {
+      setTasks(prev => prev.filter(t => t.id !== pendingNewTaskId));
+      setEvents(prev => prev.filter(ev => (ev as any).taskId !== pendingNewTaskId));
+      setPendingNewTaskId?.(null as any); // если такого стейта нет — TS проигнорирует через any
     }
 
-    const estimate = Math.max(0, Math.round(Number(draftEstimate) * 4) / 4);
-
-    // update task
-    const nextTasks = tasks.map(t =>
-      t.id === editingTaskId ? { ...t, title: title, description: draftDescription, estimateHours: estimate, status: draftStatus } : t
-    );
-    setTasks(nextTasks);
-
-    // --- NEW LOGIC: Update and save the list of unique statuses ---
-    const allStatuses = new Set(nextTasks.map(t => t.status).filter(Boolean) as string[]);
-    const updatedStatuses = [...allStatuses];
-    setStatuses(updatedStatuses);
-    // --- END OF NEW LOGIC ---
-
-    saveTasks(nextTasks); // This function saves data to localStorage
-
-    // sync events titles
-    const nextEvents = events.map(ev => ((ev as any).taskId === editingTaskId ? { ...ev, title: title } as PlainEvent : ev));
-    setEvents(nextEvents);
-    if (pendingNewTaskId === editingTaskId) setPendingNewTaskId(null);
-    saveEvents(nextEvents);
-
+    // закрываем и чистим временные состояния
+    setIsCreating?.(false);
+    setPendingSlot?.({ start: null, end: null });
     closeModal();
-  }, [editingTaskId, draftTitle, draftDescription, draftEstimate, draftStatus, tasks, events, closeModal, pendingNewTaskId]);
+    return;
+  }
+
+  // === Режим редактирования существующей задачи ===
+  if (editingTaskId && !isCreating) {
+    setTasks(prev =>
+      prev.map(t =>
+        t.id === editingTaskId
+          ? { ...t, title, description, estimateHours: estimate, status }
+          : t
+      )
+    );
+
+    // синхроним заголовок всех событий этой задачи
+    setEvents(prev => prev.map(ev => (ev.taskId === editingTaskId ? { ...ev, title } : ev)));
+
+    // финализация
+    setIsCreating(false);
+    setPendingSlot({ start: null, end: null });
+    closeModal();
+    return;
+  }
+
+  // === Режим создания новой задачи ===
+  const newTaskId = `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+  const newTask: Task = {
+    id: newTaskId,
+    title,
+    description,
+    estimateHours: estimate,
+    status,
+  };
+  setTasks(prev => [newTask, ...prev]);
+
+  // Если календарь передал слот — создаём одно событие на этот интервал
+  if (pendingSlot?.start && pendingSlot?.end) {
+    const newEvent: PlainEvent = {
+      id: `ev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      start: pendingSlot.start.toISOString(),
+      end: pendingSlot.end.toISOString(),
+      taskId: newTaskId,
+    };
+    setEvents(prev => [...prev, newEvent]);
+  }
+
+  // финализация
+  setIsCreating(false);
+  setPendingSlot({ start: null, end: null });
+
+  // если оставался старый pendingNewTaskId — подчистим для совместимости
+  if (typeof pendingNewTaskId !== "undefined" && pendingNewTaskId) {
+    setPendingNewTaskId?.(null as any);
+  }
+
+  closeModal();
+}, [
+  draftTitle,
+  draftDescription,
+  draftEstimate,
+  draftStatus,
+  editingTaskId,
+  isCreating,
+  pendingSlot?.start,
+  pendingSlot?.end,
+  setTasks,
+  setEvents,
+  closeModal,
+  // ниже — если этих сеттеров/стейтов нет в твоём файле, TS не упадёт благодаря опциональным вызовам выше
+  // @ts-ignore
+  setIsCreating,
+  // @ts-ignore
+  setPendingSlot,
+  // @ts-ignore
+  pendingNewTaskId,
+  // @ts-ignore
+  setPendingNewTaskId,
+]);
 
   const deleteTask = useCallback((e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -492,11 +588,22 @@ const App: React.FC = () => {
           <>
             <div className="sidebar" style={{ width: sidebarWidth }}>
               <Sidebar
-                onAddTask={openNewTaskModal}
                 tasks={tasks}
                 allocations={allocations}
                 onEstimateChange={onEstimateChange}
                 onTaskDblClick={handleEventDblClick}
+                onOpenCreate={() => {
+                  setIsCreating(true);
+                  setEditingTaskId(null);
+                  setPendingSlot({ start: null, end: null });
+
+                  setDraftTitle("");
+                  setDraftDescription("");
+                  setDraftEstimate(0);
+                  setDraftStatus("");
+
+                  setTaskModalOpen(true);
+                }}
                 statuses={statuses}
               />
               <div className="sidebar-resizer" onMouseDown={handleMouseDown}></div>
@@ -545,6 +652,7 @@ const App: React.FC = () => {
             <input
               id="tm-task-title"
               className="tm-input"
+              required
               value={draftTitle}
               onChange={(e) => setDraftTitle(e.target.value)}
               onKeyDown={(e) => {
@@ -602,7 +710,7 @@ const App: React.FC = () => {
               </button>
               <div className="tm-actions-right">
                 <button type="button" onClick={closeModal} className="tm-btn">Cancel</button>
-                <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary">Save</button>
+                <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary" disabled={!draftTitle.trim()}>Save</button>
               </div>
             </div>
           </div>
