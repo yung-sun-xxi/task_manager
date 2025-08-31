@@ -489,3 +489,98 @@ input[type="number"] {
   position: fixed;
   z-index: 1000;
 }
+
+.fc .fc-prev-button,
+.fc .fc-next-button {
+  font-weight: 1000 !important;
+  background: transparent !important;
+  border: 10px solid var(--color-border) !important;
+  box-shadow: none !important;
+  color: var(--color-text) !important; /* или нужный токен */
+}
+.fc .fc-prev-button:hover,
+.fc .fc-next-button:hover,
+.fc .fc-prev-button:focus,
+.fc .fc-next-button:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ==== Today & Add Task: общий hover ==== */
+/* Today — оформим подобно tm-btn-primary:hover */
+.fc .fc-today-button {
+  border: 1px solid var(--color-button-save-border) !important;
+  background: var(--color-button-save-bg) !important;
+  color: var(--color-button-save-text) !important;
+  height: 36px; line-height: 36px; border-radius: 10px;
+}
+
+.fc .fc-today-button:hover {
+  background: var(--hover-primary-bg) !important; /* тот же токен, что у .tm-btn-primary:hover */
+}
+
+/* ==== Двухстрочный заголовок дней ==== */
+.fc .fc-col-header-cell .fc-day-two-line {
+  line-height: 1.1;
+  white-space: nowrap;
+  text-align: center;
+  font-weight: 600;
+}
+.fc .fc-col-header-cell .fc-day-two-line span:first-child {
+  display: inline-block;
+  opacity: 0.95;
+}
+.fc .fc-col-header-cell .fc-day-two-line span:last-child {
+  display: inline-block;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==== Верхний хедер приложения: вертикальное центрирование ==== */
+.view-switcher-container,
+.left-actions,
+.center-actions,
+.right-actions {
+  display: flex;
+  align-items: center; /* вертикально по центру */
+  min-height: 44px;    /* единая высота строки хедера */
+}
+.view-switcher-btn,
+.tm-btn,
+.theme-toggle-btn {
+  height: 36px;
+  line-height: 36px;
+  display: inline-flex;
+  align-items: center; /* выравнивание текста/иконок внутри */
+}
+
+.view-switcher-btn.is-active {
+  border: 1px solid var(--color-sidebar-button-active-text);
+}
+
+/* ==== Внутренний reorder сайдбара: визуальная подсветка места вставки ==== */
+.tm-task-item.is-drag-over {
+  outline: 2px dashed var(--color-sidebar-button-active-text);
+  outline-offset: 3px;
+}
+
+/* ========== FullCalendar nav arrows: no bg/border/hover ========== */
+.fc .fc-toolbar .fc-button.fc-NavPrev-button,
+.fc .fc-toolbar .fc-button.fc-NavNext-button {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--color-text) !important;
+}
+.fc .fc-toolbar .fc-button.fc-NavPrev-button:hover,
+.fc .fc-toolbar .fc-button.fc-NavNext-button:hover,
+.fc .fc-toolbar .fc-button.fc-NavPrev-button:focus,
+.fc .fc-toolbar .fc-button.fc-NavNext-button:focus,
+.fc .fc-toolbar .fc-button.fc-NavPrev-button:active,
+.fc .fc-toolbar .fc-button.fc-NavNext-button:active {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--color-text) !important;
+}
+

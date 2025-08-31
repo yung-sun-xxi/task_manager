@@ -170,9 +170,13 @@ const CalendarView: React.FC<Props> = (props) => {
     borderColor: ev.borderColor,
   }));
 
+  // Форматер для второй строки заголовка (ММ ДД)
+  const fmtMD = new Intl.DateTimeFormat(undefined, { month: "2-digit", day: "2-digit" });
+
   return (
     <div className="calendar-wrapper">
       <FullCalendar
+        firstDay={1} /* неделя с понедельника */
         ref={calRef as any}
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
@@ -194,31 +198,42 @@ const CalendarView: React.FC<Props> = (props) => {
           minute: "2-digit",
           hour12: false,
         }}
-        dayHeaderFormat={{
-          weekday: "short",
-          day: "2-digit",
-          month: "2-digit",
+        /* двухстрочный хедер: день недели + перенос + ММ ДД */
+        dayHeaderContent={(arg) => {
+          // arg.text обычно содержит локализованный «день месяца» и/или «день недели».
+          // Для стабильности берём короткий weekday из API и отдельно форматим ММ ДД.
+          const weekday = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(arg.date); // Mon/Tue/…
+          const mdRaw = fmtMD.format(arg.date); // зависит от локали (напр. 09/01)
+          const md = mdRaw.replace(/[^\d]/g, " ").trim().replace(/\s+/, " "); // "09 01"
+          return { html: `<div class="fc-day-two-line"><span>${weekday}</span><br/><span>${md}</span></div>` };
         }}
+        /* Кастомные кнопки навигации, чтобы иметь отдельные CSS-классы */
         customButtons={{
+          NavPrev: {
+            text: "‹",
+            click: () => (calRef.current as any)?.getApi?.().prev?.(),
+          },
+          NavNext: {
+            text: "›",
+            click: () => (calRef.current as any)?.getApi?.().next?.(),
+          },
           Today: {
             text: "Today",
-            click: () => {
-              (calRef.current as any)?.getApi().today();
-            },
+            click: () => (calRef.current as any)?.getApi?.().today?.(),
           },
         }}
         headerToolbar={{
-          left: "prev,next Today",
+          left: "NavPrev,NavNext Today",
           center: "title",
           right: "",
         }}
         events={fcEvents}
         select={handleSelect}
-        dateClick={handleDateClick}    // ← двойной клик по пустому месту
+        dateClick={handleDateClick}    /* двойной клик по пустому месту */
         eventAdd={handleEventAdd}
         eventChange={handleEventChange}
         eventRemove={handleEventRemove}
-        eventReceive={handleEventReceive}   // ← внешний DnD из Sidebar
+        eventReceive={handleEventReceive}   /* внешний DnD из Sidebar */
         eventDidMount={eventDidMount}
         height="100%"
         themeSystem="bootstrap5"

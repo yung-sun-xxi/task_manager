@@ -74,6 +74,16 @@ const App: React.FC = () => {
         .filter(s => s.length > 0)
     ));
   });
+
+  // хелпер и обработчик
+  const reorderByIds = (list: Task[], ids: string[]) => {
+    const map = new Map(list.map(t => [t.id, t]));
+    return ids.map(id => map.get(id)!).filter(Boolean);
+  };
+  const handleReorder = (ids: string[]) => {
+    setTasks(prev => reorderByIds(prev, ids));
+  };
+
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
   // new state to manage which view is active
@@ -604,6 +614,7 @@ const saveModal = useCallback(() => {
 
                   setTaskModalOpen(true);
                 }}
+                onReorder={handleReorder}
                 statuses={statuses}
               />
               <div className="sidebar-resizer" onMouseDown={handleMouseDown}></div>
