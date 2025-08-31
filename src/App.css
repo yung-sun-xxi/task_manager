@@ -1,10 +1,20 @@
 /* src/App.css */
 .app-shell {
   display: flex;
-  flex-direction: row;
+  flex-direction: column; /* Изменяем на column для размещения навигации сверху */
   height: 100vh;
   overflow: hidden;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Новый контейнер для сайдбара и основного контента */
+.main-content-row {
+  display: flex;
+  flex-direction: row;
+  height: 100%; /* Занимает всю оставшуюся высоту */
+  overflow: hidden;
 }
 
 .sidebar {
@@ -282,10 +292,200 @@ input[type="number"] {
 }
 
 .tm-btn-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border-radius: 10px;
   font-size: 20px;
   line-height: 1;
+}
+
+/* Theme toggle button (top-right) */
+.theme-toggle-btn {
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--color-sidebar-button-border);
+  background: var(--color-sidebar-button-bg);
+  color: var(--color-sidebar-button-text);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+.theme-toggle-btn:hover {
+  background: var(--hover-primary-bg);
+}
+
+/* ---- Theme chooser menu (appears on long press) ---- */
+.theme-menu {
+  position: fixed;
+  top: 54px;
+  right: 12px;
+  z-index: 111;
+  background: var(--color-task-card-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-task-card-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px var(--mulberry-16);
+  padding: 6px;
+  min-width: 160px;
+}
+
+.theme-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.theme-menu-item:hover {
+  background: var(--hover-secondary-bg);
+}
+.theme-menu-item.is-active {
+  outline: 2px solid var(--color-calendar-nav-button-border);
+}
+
+/* visual highlight while dragging over an item */
+.theme-menu-item.is-hover {
+  background: var(--hover-secondary-bg);
+}
+
+.view-switcher-container {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between; /* Распределяет элементы по краям */
+  align-items: center; /* Выравнивает элементы по центру по вертикали */
+  padding: 12px;
+  padding-bottom: 24px;
+  border-bottom: 3px solid var(--color-divider);
+  background: transparent;
+}
+
+/* Контейнер для центрирования кнопки */
+.center-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1; /* Позволяет этому блоку растягиваться и толкать другие элементы */
+}
+
+/* Контейнер для кнопки темы */
+.right-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.view-switcher-btn {
+  padding: 0 12px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid black;
+  background: transparent;
+  color: var(--color-sidebar-button-text);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.view-switcher-btn.is-active {
+  background: var(--color-sidebar-button-bg);
+  color: var(--color-sidebar-button-active-text);
+  border: 3px solid var(--color-sidebar-button-active-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Kanban board main container */
+.kanban-main {
+  padding: 12px;
+}
+
+.kanban-board-container {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+}
+
+.kanban-column {
+  flex: 0 0 300px;
+  background: var(--color-kanban-column-bg);
+  border-radius: 12px;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-column-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 12px;
+}
+
+.kanban-column-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.kanban-column-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kanban-column .tm-task-item {
+  width: 100%;
+}
+
+.top-right-actions {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 110;
+    display: flex;
+    gap: 8px;
+}
+
+.tm-btn-danger {
+    /* стили для красной кнопки */
+}
+
+/* Добавь в App.css */
+.kanban-drop-indicator {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--color-sidebar-button-active-text);
+  margin: 6px 0;
+}
+.kanban-empty { padding: 8px 0 4px; opacity: 0.7; }
+.kanban-empty-hint { padding: 6px 8px; border: 1px dashed var(--color-border); border-radius: 8px; text-align: center; }
+.kanban-bottom-dropzone { height: 12px; } /* «якорь» для дропа в конец */
+
+.left-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;   /* <-- вот это расстояние между Calendar и Kanban */
+}
+
+/* Добавьте это */
+.kanban-column-tasks .tm-task-item {
+  width: auto; /* или любое другое фиксированное значение, если нужно */
+  max-width: 100%; /* чтобы не вылезло за пределы колонки */
+}
+
+/* И добавьте это для фикса ширины при драгге */
+.tm-task-item.dragging {
+  width: calc(100% - 24px); /* или любое другое значение, соответствующее padding колонки */
+  max-width: 250px; /* или любая другая ширина карточки */
+  position: fixed;
+  z-index: 1000;
 }

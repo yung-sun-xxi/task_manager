@@ -70,7 +70,7 @@
 
 /* === Step 6: Adjusting row and header height === */
 .fc-timegrid-slot {
-  height: 1.5em !important;
+  height: 1.0em !important;
 }
 
 .fc-col-header-cell-cush {
@@ -97,4 +97,16 @@
 .fc-button-primary:hover {
   background-color: var(--color-accent) !important;
   border-color: var(--color-accent) !important;
+}
+
+/* Unify FullCalendar top bar buttons: radius = 8px, height = 36px */
+.fc .fc-toolbar .fc-button,
+.fc .fc-toolbar .fc-button-primary {
+  height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 600 !important;
 }

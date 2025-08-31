@@ -10,9 +10,10 @@ import { Notifications } from '@mantine/notifications';
 
 /* Your project styles (as before) */
 import './index.css';
-import './colors.css'; // New file added for color management
 import './modal_fix.css';
 import './calendar.css';
+import "./themes/theme-light.css";
+import "./themes/theme-dark.css";
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
