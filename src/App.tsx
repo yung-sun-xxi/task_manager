@@ -80,7 +80,9 @@ const reorderByIds = (list: Task[], ids: string[]) => {
   const map = new Map(list.map(t => [t.id, t]));
   return ids.map(id => map.get(id)!).filter(Boolean);
 };
+
 const handleReorder = (ids: string[]) => {
+  console.log("[onReorder] new order:", ids); // <-- лог для проверки
   setTasks(prev => reorderByIds(prev, ids));
 };
 

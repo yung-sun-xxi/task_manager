@@ -616,3 +616,49 @@ html.theme-light .fc .fc-Today-button:focus {
 .kanban-placeholder {
   width: 100%;
 }
+
+/* Tauri/WebKit: запретить "перетаскивание окна" в сайдбаре и его дочерних */
+.tm-sidebar,
+.tm-sidebar * {
+  -webkit-app-region: no-drag;
+}
+
+/* на всякий, чтобы точно получать события */
+.task-list {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.reorder-handle { cursor: grab; user-select: none; padding: 4px 6px; }
+.reorder-handle:active { cursor: grabbing; }
+
+.tm-task-item.dragging { 
+  opacity: 0.98; 
+  box-shadow: 0 8px 28px rgba(0,0,0,.2); 
+  pointer-events: none; /* чтобы не мешать хит-тесту */
+}
+
+.tm-ghost-placeholder { width: 100%; }
+
+.task-list { display: grid; row-gap: 8px; }
+
+.tm-task-item {
+  will-change: transform;
+}
+
+/* исходная карточка остаётся на месте, просто прячется */
+.tm-task-item.dragging-origin {
+  visibility: visible; /* будет переключаться inline-стилем на hidden только в момент старта */
+}
+
+/* фантом, который катается за курсором */
+.tm-task-ghost {
+  pointer-events: none;
+  border-radius: 12px; /* под твой стиль */
+  background: var(--color-task-card-bg, #fff);
+}
+
+/* ручка */
+.reorder-handle { cursor: grab; user-select: none; padding: 4px 6px; touch-action: none; }
+.reorder-handle:active { cursor: grabbing; }

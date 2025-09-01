@@ -1,5 +1,5 @@
 // src/components/Sidebar.tsx
-import React, { useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Draggable } from "@fullcalendar/interaction";
 
 export type Task = {
@@ -14,52 +14,62 @@ export type Task = {
 type Props = {
   tasks: Task[];
   allocations: Record<string, number>;
-  onEstimateChange: (taskId: string, estimate: number) => void; // для совместимости
-  onTaskDblClick?: (taskId: string) => void;
-  /**
-   * Запрос на создание НОВОЙ задачи (должен ТОЛЬКО открыть модалку в App).
-   * ВАЖНО: не создавайте задачу мгновенно — создавайте её только после Save.
-   */
+  onTaskDblClick?: (taskId?: string) => void;
   onOpenCreate?: () => void;
-  /**
-   * @deprecated Использовалось ранее. Оставлено ради обратной совместимости.
-   * Если передан и onOpenCreate отсутствует — будет вызван.
-   */
   onAddTask?: () => void;
-  /**
-   * Коллбек для перестановки задач в новом порядке (по массиву id).
-   * App должен применить новый порядок к tasks и сохранить.
-   */
   onReorder?: (ids: string[]) => void;
   statuses: string[];
 };
 
+type DragState = {
+  taskId: string;
+  fromIndex: number;
+  startX: number;
+  startY: number;
+  elW: number;
+  elH: number;
+  started: boolean;       // true => мы в режиме REORDER (pointer-DnD с ghost)
+  stackStep: number;
+  grabOffsetX: number;
+  grabOffsetY: number;
+};
+
+const DRAG_THRESHOLD_Y = 7;    // вертикальный порог для реордера
+const INTENT_X_TO_CAL = 24;    // горизонтальный порог "в календарь"
+const EXIT_SIDEBAR_MARGIN = 8; // дополнительный буфер у правого края
+
 const Sidebar: React.FC<Props> = ({
   tasks,
   allocations,
-  onEstimateChange, // eslint-disable-line @typescript-eslint/no-unused-vars
   onTaskDblClick,
   onOpenCreate,
-  onAddTask, // deprecated fallback
+  onAddTask,
   onReorder,
   statuses,
 }) => {
   const listRef = useRef<HTMLDivElement | null>(null);
-  const taskRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // ========= ВНЕШНИЙ DnD → FullCalendar =========
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [hoverPos, setHoverPos] = useState<"before" | "after">("before");
+
+  // режимы намерений
+  const delegatedToCalendarRef = useRef(false); // если true — отдали управление FullCalendar'у
+  const originElRef = useRef<HTMLElement | null>(null);
+  const ghostElRef = useRef<HTMLElement | null>(null);
+
+  // ========= FullCalendar external draggable =========
+  // ДАЁМ FC слушать как тело карточки, так и ручку.
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
-
     const draggable = new Draggable(el, {
-      itemSelector: ".task-content",
+      itemSelector: ".to-calendar, .to-calendar-handle",
       eventData: (eventEl) => {
         const node = (eventEl as HTMLElement).closest(".tm-task-item") as HTMLElement | null;
-        const id = node?.getAttribute("data-task-id") || "";
-        const title = node?.getAttribute("data-title") || "";
-        const color = node?.getAttribute("data-color") || undefined;
-
+        const id = node?.dataset.taskId || "";
+        const title = node?.dataset.title || "";
+        const color = node?.dataset.color || undefined;
         return {
           id,
           title,
@@ -69,81 +79,248 @@ const Sidebar: React.FC<Props> = ({
         };
       },
     });
-
-    return () => {
-      draggable.destroy();
-    };
+    return () => draggable.destroy();
   }, [tasks]);
 
-  // Мемоизируем список карточек
   const items = useMemo(() => tasks, [tasks]);
+  const makeIds = useCallback(() => items.map(t => t.id), [items]);
 
-  // ========= Добавление задачи ("+") =========
+  // ===== helpers =====
+  function measureStackStep(taskEl: HTMLElement): number {
+    const next = taskEl.nextElementSibling as HTMLElement | null;
+    const thisTop = taskEl.getBoundingClientRect().top;
+    if (next) {
+      const nextTop = next.getBoundingClientRect().top;
+      const step = Math.round(nextTop - thisTop);
+      return step > 0 ? step : Math.round(taskEl.getBoundingClientRect().height);
+    } else {
+      const h = Math.round(taskEl.getBoundingClientRect().height);
+      const list = taskEl.closest(".task-list") as HTMLElement | null;
+      let gap = 0;
+      if (list) {
+        const cs = getComputedStyle(list);
+        gap = parseFloat(cs.rowGap) || parseFloat(cs.gap) || 0;
+      }
+      return h + gap;
+    }
+  }
+
+  function createGhostFrom(el: HTMLElement): HTMLElement {
+    const r = el.getBoundingClientRect();
+    const ghost = el.cloneNode(true) as HTMLElement;
+    ghost.classList.add("tm-task-ghost");
+    ghost.style.position = "fixed";
+    ghost.style.width = `${Math.round(r.width)}px`;
+    ghost.style.height = `${Math.round(r.height)}px`;
+    ghost.style.left = `${r.left}px`;
+    ghost.style.top = `${r.top}px`;
+    ghost.style.margin = "0";
+    ghost.style.pointerEvents = "none";
+    ghost.style.zIndex = "1000";
+    ghost.style.boxShadow = "0 8px 28px rgba(0,0,0,.2)";
+    ghost.style.opacity = "0.98";
+    document.body.appendChild(ghost);
+    return ghost;
+  }
+
+  function moveGhost(ghost: HTMLElement, x: number, y: number, offsetX: number, offsetY: number) {
+    ghost.style.left = `${Math.round(x - offsetX)}px`;
+    ghost.style.top = `${Math.round(y - offsetY)}px`;
+  }
+
+  function destroyGhost() {
+    ghostElRef.current?.remove();
+    ghostElRef.current = null;
+  }
+
+  // ===== Intent detection: решаем, куда хочет пользователь =====
+  function wantsCalendar(e: React.PointerEvent) {
+    const sidebar = listRef.current?.getBoundingClientRect();
+    if (!sidebar) return false;
+    const dx = e.clientX - (drag?.startX ?? e.clientX);
+    const leftBound = sidebar.right - EXIT_SIDEBAR_MARGIN; // почти у правого края
+    const exitedRight = e.clientX > leftBound;
+    return Math.abs(dx) > INTENT_X_TO_CAL || exitedRight;
+  }
+
+  // ===== Pointer DnD только на ручке =====
+  const handlePointerDown = (e: React.PointerEvent, index: number, taskId: string) => {
+    // ВАЖНО: НЕ делаем preventDefault/stopPropagation и НЕ ставим setPointerCapture.
+    // Даём FullCalendar возможность тоже слушать события (на случай "в календарь").
+    const el = document.getElementById(`task-${taskId}`) as HTMLElement | null;
+    if (!el) return;
+
+    const r = el.getBoundingClientRect();
+    const grabOffsetX = e.clientX - r.left;
+    const grabOffsetY = e.clientY - r.top;
+
+    originElRef.current = el;
+    delegatedToCalendarRef.current = false;
+
+    setDrag({
+      taskId,
+      fromIndex: index,
+      startX: e.clientX,
+      startY: e.clientY,
+      elW: Math.round(r.width),
+      elH: Math.round(r.height),
+      started: false, // пока никуда не поехали
+      stackStep: measureStackStep(el),
+      grabOffsetX,
+      grabOffsetY,
+    });
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!drag) return;
+    const origin = originElRef.current;
+    if (!origin) return;
+
+    // Если мы уже делегировали в календарь — выходим (FC дальше рулит)
+    if (delegatedToCalendarRef.current) return;
+
+    // Пока не стартовали наш REORDER — определяем намерение
+    if (!drag.started) {
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+
+      // Намерение: в календарь
+      if (wantsCalendar(e)) {
+        // НИЧЕГО не делаем: не скрываем origin, не создаём ghost, не захватываем pointer.
+        // Просто помечаем, что мы больше не вмешиваемся — дальше FullCalendar Draggable возьмёт управление.
+        delegatedToCalendarRef.current = true;
+
+        // Добавим классы, чтобы визуально дать фидбек (опционально):
+        // origin.classList.add("delegated-to-calendar");
+        return;
+      }
+
+      // Намерение: реордер (существенное вертикальное движение)
+      if (Math.abs(dy) >= DRAG_THRESHOLD_Y && Math.abs(dy) >= Math.abs(dx)) {
+        // Стартуем наш pointer-DnD
+        const ghost = createGhostFrom(origin);
+        ghostElRef.current = ghost;
+        origin.style.visibility = "hidden"; // оставляем в потоке
+        document.body.style.userSelect = "none";
+
+        moveGhost(ghost, e.clientX, e.clientY, drag.grabOffsetX, drag.grabOffsetY);
+
+        // Теперь захватываем pointer (чтобы наш реордер был стабильным)
+        (e.target as Element).setPointerCapture?.(e.pointerId);
+
+        setDrag({ ...drag, started: true });
+        return;
+      }
+
+      // иначе — ещё «ждём» намерение
+      return;
+    }
+
+    // === Уже в режиме REORDER (ghost) ===
+    if (ghostElRef.current) {
+      moveGhost(ghostElRef.current, e.clientX, e.clientY, drag.grabOffsetX, drag.grabOffsetY);
+    }
+
+    // считаем целевую позицию среди карточек
+    const listEl = listRef.current;
+    if (!listEl) return;
+    const cards = Array.from(listEl.querySelectorAll<HTMLElement>(".tm-task-item"));
+
+    if (cards.length === 0) {
+      setHoverIndex(null);
+      return;
+    }
+
+    let idx = cards.length - 1;
+    let pos: "before" | "after" = "after";
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i] === origin) continue; // он скрыт, но пусть будет
+      const rect = cards[i].getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) {
+        idx = i;
+        pos = "before";
+        break;
+      }
+    }
+    setHoverIndex(idx);
+    setHoverPos(pos);
+  };
+
+  const handlePointerUp = () => {
+    const origin = originElRef.current;
+
+    // Если делегировали в календарь — FullCalendar сам завершит перетаскивание.
+    if (delegatedToCalendarRef.current) {
+      delegatedToCalendarRef.current = false;
+      setDrag(null);
+      setHoverIndex(null);
+      originElRef.current = null;
+      destroyGhost();
+      document.body.style.userSelect = "";
+      return;
+    }
+
+    // Если шёл REORDER
+    if (origin) origin.style.visibility = "";
+    destroyGhost();
+    document.body.style.userSelect = "";
+
+    if (drag?.started && hoverIndex !== null) {
+      const toVisual = hoverPos === "after" ? hoverIndex + 1 : hoverIndex;
+      let to = toVisual;
+      if (drag.fromIndex < to) to -= 1;
+
+      const ids = makeIds();
+      const from = drag.fromIndex;
+      if (from !== -1) {
+        const [moved] = ids.splice(from, 1);
+        const insertAt = Math.max(0, Math.min(ids.length, to));
+        ids.splice(insertAt, 0, moved);
+        onReorder?.(ids);
+      }
+    }
+
+    setDrag(null);
+    setHoverIndex(null);
+    originElRef.current = null;
+  };
+
+  const handlePointerCancel = () => {
+    const origin = originElRef.current;
+    if (origin) origin.style.visibility = "";
+    destroyGhost();
+    document.body.style.userSelect = "";
+    delegatedToCalendarRef.current = false;
+    setDrag(null);
+    setHoverIndex(null);
+    originElRef.current = null;
+  };
+
+  // ====== анимация разъезда соседей ======
+  const getTranslateY = (i: number): number => {
+    if (!drag || !drag.started || hoverIndex === null) return 0;
+
+    const toVisual = hoverPos === "after" ? hoverIndex + 1 : hoverIndex;
+    let toFull = toVisual;
+    if (drag.fromIndex < toFull) toFull -= 1;
+
+    const from = drag.fromIndex;
+    const step = drag.stackStep;
+
+    if (toFull > from) {
+      if (i > from && i <= toFull) return -step;
+    } else if (toFull < from) {
+      if (i >= toFull && i < from) return +step;
+    }
+    return 0;
+  };
+
   const handleAddClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onOpenCreate) { onOpenCreate(); return; }
-    if (onAddTask) { onAddTask(); return; }
-    // eslint-disable-next-line no-console
-    console.warn("[Sidebar] No onOpenCreate/onAddTask handler provided for + button");
-  };
-
-  // ========= ВНУТРЕННИЙ REORDER (HTML5 DnD на ручке) =========
-  const REORDER_MIME = "text/x-reorder-task-id";
-
-  const makeIds = useCallback(() => items.map(t => t.id), [items]);
-
-  const handleReorderDragStart = (e: React.DragEvent, taskId: string) => {
-    e.stopPropagation(); // не даём FullCalendar Draggable вмешаться
-    e.dataTransfer.setData(REORDER_MIME, taskId);
-    e.dataTransfer.effectAllowed = "move";
-    // для Firefox нужен хоть какой-то текст
-    e.dataTransfer.setData("text/plain", taskId);
-  };
-
-  const handleCardDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes(REORDER_MIME)) return;
-    e.preventDefault(); // разрешить drop
-    const el = e.currentTarget;
-    el.classList.add("is-drag-over");
-
-    // добавим позицию вставки: перед/после — в зависимости от Y
-    const rect = el.getBoundingClientRect();
-    const before = e.clientY < rect.top + rect.height / 2;
-    el.dataset.dropPos = before ? "before" : "after";
-  };
-
-  const clearCardDragState = (el: HTMLElement | null) => {
-    if (!el) return;
-    el.classList.remove("is-drag-over");
-    delete (el as any).dataset.dropPos;
-  };
-
-  const handleCardDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes(REORDER_MIME)) return;
-    clearCardDragState(e.currentTarget);
-  };
-
-  const handleCardDrop = (e: React.DragEvent<HTMLDivElement>, targetTaskId: string) => {
-    if (!e.dataTransfer.types.includes(REORDER_MIME)) return;
-    e.preventDefault();
-    e.stopPropagation();
-
-    const targetEl = e.currentTarget;
-    const dropPos = targetEl.dataset.dropPos as ("before" | "after" | undefined);
-    clearCardDragState(targetEl);
-
-    const draggedId = e.dataTransfer.getData(REORDER_MIME);
-    if (!draggedId || !onReorder) return;
-    if (draggedId === targetTaskId) return;
-
-    // построим новый порядок
-    const ids = makeIds().filter(id => id !== draggedId);
-    const idx = ids.indexOf(targetTaskId);
-    const insertAt = idx < 0 ? ids.length : (dropPos === "after" ? idx + 1 : idx);
-    ids.splice(insertAt, 0, draggedId);
-
-    onReorder(ids);
+    if (onOpenCreate) return onOpenCreate();
+    if (onAddTask) return onAddTask();
+    console.warn("[Sidebar] No onOpenCreate/onAddTask handler provided");
   };
 
   return (
@@ -154,15 +331,14 @@ const Sidebar: React.FC<Props> = ({
           type="button"
           className="tm-btn tm-btn-primary tm-btn-icon"
           onClick={handleAddClick}
-          title="Add task"
-          aria-label="Add task"
+          title="Create Task"
         >
           +
         </button>
       </div>
 
       <div className="task-list" ref={listRef}>
-        {items.map((t) => {
+        {items.map((t, i) => {
           const planned = allocations[t.id] ?? 0;
           const ratio = t.estimateHours > 0 ? planned / t.estimateHours : 0;
 
@@ -178,56 +354,49 @@ const Sidebar: React.FC<Props> = ({
           const eventColor = `var(--color-task-card-bg)`;
           const truncatedTitle = t.title.length > 70 ? t.title.slice(0, 67) + "..." : t.title;
 
+          const isDragging = drag?.taskId === t.id;
+
           return (
             <div
               key={t.id}
-              className="tm-task-item"
-              onDoubleClick={() => onTaskDblClick?.(t.id)}
-              onDragOver={handleCardDragOver}
-              onDragLeave={handleCardDragLeave}
-              onDrop={(e) => handleCardDrop(e, t.id)}
+              id={`task-${t.id}`}
+              className={`tm-task-item${isDragging ? " dragging-origin" : ""}`}
               data-task-id={t.id}
               data-title={t.title}
               data-color={eventColor}
-              ref={(el) => {
-                if (el) taskRefs.current.set(t.id, el);
-                else taskRefs.current.delete(t.id);
+              onDoubleClick={() => onTaskDblClick?.(t.id)}
+              style={{
+                transform: `translateY(${getTranslateY(i)}px)`,
+                transition: drag?.started ? "transform 140ms ease" : undefined,
               }}
             >
-              {/* Ручка для перестановки списка (не конфликтует с FullCalendar drag) */}
+              {/* Ручка: теперь и reorder, и источник для календаря */}
               <div
-                className="reorder-handle"
-                draggable
-                onMouseDown={(e) => { e.stopPropagation(); }}  // ВАЖНО: чтобы FC не схватил mousedown
-                onDragStart={(e) => handleReorderDragStart(e, t.id)}
+                className="reorder-handle to-calendar-handle"
+                // ВАЖНО: не вызываем preventDefault/stopPropagation в onPointerDown
+                onPointerDown={(e) => handlePointerDown(e, i, t.id)}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
+                title="Drag to reorder or drop onto calendar"
               >
                 ≡
               </div>
 
-              <div className="task-content">
+              {/* Контент: по-прежнему источник для календаря */}
+              <div className="task-content to-calendar">
                 <div className="task-header">
                   <div className="task-title" style={{ color: "var(--color-task-title)" }}>
                     {truncatedTitle || "(untitled)"}
                   </div>
                   {t.description ? <div className="task-desc">{t.description}</div> : null}
-                  {t.status && (
-                    <div
-                      className="task-status"
-                      style={{ color: "var(--color-text-muted)", fontSize: "12px" }}
-                    >
-                      Status: {t.status}
-                    </div>
-                  )}
                 </div>
 
-                <div className="task-bar-row">
-                  <div className="task-bar-container">
+                <div className="task-bar">
+                  <div className="task-bar-track">
                     <div
                       className="task-bar-fill"
-                      style={{
-                        width: `${Math.min(100, ratio * 100)}%`,
-                        backgroundColor: barColor,
-                      }}
+                      style={{ width: `${Math.min(100, ratio * 100)}%`, backgroundColor: barColor }}
                     />
                   </div>
                   <div className="task-bar-label">
@@ -239,6 +408,8 @@ const Sidebar: React.FC<Props> = ({
           );
         })}
       </div>
+
+      {statuses?.length ? <div className="sidebar-statuses">{/* optional */}</div> : null}
     </div>
   );
 };
