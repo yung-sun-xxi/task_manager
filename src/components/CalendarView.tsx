@@ -14,6 +14,7 @@ import type { EventReceiveArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
+import enGbLocale from '@fullcalendar/core/locales/en-gb';
 
 export type PlainEvent = {
   id: string;
@@ -173,74 +174,90 @@ const CalendarView: React.FC<Props> = (props) => {
   // Форматер для второй строки заголовка (ММ ДД)
   const fmtMD = new Intl.DateTimeFormat(undefined, { month: "2-digit", day: "2-digit" });
 
-  return (
-    <div className="calendar-wrapper">
-      <FullCalendar
-        firstDay={1} /* неделя с понедельника */
-        ref={calRef as any}
-        plugins={[timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        slotDuration="00:15:00"
-        snapDuration="00:15:00"
-        defaultTimedEventDuration="00:15:00"
-        selectable={true}
-        selectMirror={true}
-        nowIndicator={false}
-        droppable={true}
-        editable={true}
-        eventResizableFromStart={true}
-        allDaySlot={false}
-        slotMinTime="09:00:00"
-        slotMaxTime="21:15:00"
-        slotLabelInterval="01:00"
-        slotLabelFormat={{
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }}
-        /* двухстрочный хедер: день недели + перенос + ММ ДД */
-        dayHeaderContent={(arg) => {
-          // arg.text обычно содержит локализованный «день месяца» и/или «день недели».
-          // Для стабильности берём короткий weekday из API и отдельно форматим ММ ДД.
-          const weekday = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(arg.date); // Mon/Tue/…
-          const mdRaw = fmtMD.format(arg.date); // зависит от локали (напр. 09/01)
-          const md = mdRaw.replace(/[^\d]/g, " ").trim().replace(/\s+/, " "); // "09 01"
-          return { html: `<div class="fc-day-two-line"><span>${weekday}</span><br/><span>${md}</span></div>` };
-        }}
-        /* Кастомные кнопки навигации, чтобы иметь отдельные CSS-классы */
-        customButtons={{
-          NavPrev: {
-            text: "‹",
-            click: () => (calRef.current as any)?.getApi?.().prev?.(),
+return (
+  <div className="calendar-wrapper">
+    <FullCalendar
+      /* === Фикс заголовков столбцов: DD/MM и двухстрочный вид === */
+      views={{
+        timeGridWeek: {
+          dayHeaderContent: ({ date }) => {
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short' }).format(date);
+            return { html: `<div class="fc-day-two-line"><span>${weekday}</span><br/><span>${dd}/${mm}</span></div>` };
           },
-          NavNext: {
-            text: "›",
-            click: () => (calRef.current as any)?.getApi?.().next?.(),
+        },
+        timeGridDay: {
+          dayHeaderContent: ({ date }) => {
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short' }).format(date);
+            return { html: `<div class="fc-day-two-line"><span>${weekday}</span><br/><span>${dd}/${mm}</span></div>` };
           },
-          Today: {
-            text: "Today",
-            click: () => (calRef.current as any)?.getApi?.().today?.(),
-          },
-        }}
-        headerToolbar={{
-          left: "NavPrev,NavNext Today",
-          center: "title",
-          right: "",
-        }}
-        events={fcEvents}
-        select={handleSelect}
-        dateClick={handleDateClick}    /* двойной клик по пустому месту */
-        eventAdd={handleEventAdd}
-        eventChange={handleEventChange}
-        eventRemove={handleEventRemove}
-        eventReceive={handleEventReceive}   /* внешний DnD из Sidebar */
-        eventDidMount={eventDidMount}
-        height="100%"
-        themeSystem="bootstrap5"
-        eventClassNames="my-event"
-      />
-    </div>
-  );
+        },
+      }}
+
+      firstDay={1} /* неделя с понедельника */
+      ref={calRef as any}
+      plugins={[timeGridPlugin, interactionPlugin]}
+      initialView="timeGridWeek"
+      slotDuration="00:15:00"
+      snapDuration="00:15:00"
+      defaultTimedEventDuration="00:15:00"
+      selectable={true}
+      selectMirror={true}
+      nowIndicator={false}
+      droppable={true}
+      editable={true}
+      eventResizableFromStart={true}
+      allDaySlot={false}
+      slotMinTime="09:00:00"
+      slotMaxTime="21:15:00"
+      slotLabelInterval="01:00"
+      slotLabelFormat={{
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }}
+
+      /* ⚠️ ВАЖНО: удалили общий dayHeaderContent с fmtMD, чтобы не падало */
+
+      /* Кастомные кнопки навигации */
+      customButtons={{
+        NavPrev: {
+          text: "‹",
+          click: () => (calRef.current as any)?.getApi?.().prev?.(),
+        },
+        NavNext: {
+          text: "›",
+          click: () => (calRef.current as any)?.getApi?.().next?.(),
+        },
+        Today: {
+          text: "Today",
+          click: () => (calRef.current as any)?.getApi?.().today?.(),
+        },
+      }}
+      headerToolbar={{
+        left: "NavPrev,NavNext Today",
+        center: "title",
+        right: "",
+      }}
+
+      events={fcEvents}
+      select={handleSelect}
+      dateClick={handleDateClick}
+      eventAdd={handleEventAdd}
+      eventChange={handleEventChange}
+      eventRemove={handleEventRemove}
+      eventReceive={handleEventReceive}
+      eventDidMount={eventDidMount}
+      height="100%"
+      themeSystem="bootstrap5"
+      eventClassNames="my-event"
+    />
+  </div>
+);
+
 };
 
 export default CalendarView;

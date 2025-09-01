@@ -75,14 +75,14 @@ const App: React.FC = () => {
     ));
   });
 
-  // хелпер и обработчик
-  const reorderByIds = (list: Task[], ids: string[]) => {
-    const map = new Map(list.map(t => [t.id, t]));
-    return ids.map(id => map.get(id)!).filter(Boolean);
-  };
-  const handleReorder = (ids: string[]) => {
-    setTasks(prev => reorderByIds(prev, ids));
-  };
+// хелпер и обработчик
+const reorderByIds = (list: Task[], ids: string[]) => {
+  const map = new Map(list.map(t => [t.id, t]));
+  return ids.map(id => map.get(id)!).filter(Boolean);
+};
+const handleReorder = (ids: string[]) => {
+  setTasks(prev => reorderByIds(prev, ids));
+};
 
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 

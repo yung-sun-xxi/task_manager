@@ -42,9 +42,10 @@ const Sidebar: React.FC<Props> = ({
   onOpenCreate,
   onAddTask, // deprecated fallback
   onReorder,
-  statuses, // eslint-disable-line @typescript-eslint/no-unused-vars
+  statuses,
 }) => {
   const listRef = useRef<HTMLDivElement | null>(null);
+  const taskRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // ========= ВНЕШНИЙ DnD → FullCalendar =========
   useEffect(() => {
@@ -52,10 +53,7 @@ const Sidebar: React.FC<Props> = ({
     if (!el) return;
 
     const draggable = new Draggable(el, {
-      // ВАЖНО: itemSelector — карточка задачи, но наш внутренний reorder стартует с .reorder-handle,
-      // поэтому FullCalendar не перехватит его (handle не .tm-task-item).
-      itemSelector: ".tm-task-item",
-      // маппим DOM → FullCalendar EventInput
+      itemSelector: ".task-content",
       eventData: (eventEl) => {
         const node = (eventEl as HTMLElement).closest(".tm-task-item") as HTMLElement | null;
         const id = node?.getAttribute("data-task-id") || "";
@@ -191,44 +189,50 @@ const Sidebar: React.FC<Props> = ({
               data-task-id={t.id}
               data-title={t.title}
               data-color={eventColor}
+              ref={(el) => {
+                if (el) taskRefs.current.set(t.id, el);
+                else taskRefs.current.delete(t.id);
+              }}
             >
               {/* Ручка для перестановки списка (не конфликтует с FullCalendar drag) */}
-                <div
-                  className="reorder-handle"
-                  draggable
-                  onMouseDown={(e) => { e.stopPropagation(); }}  // ВАЖНО: чтобы FC не схватил mousedown
-                  onDragStart={(e) => handleReorderDragStart(e, t.id)}
-                >
-                  ≡
-                </div>
-
-              <div className="task-header">
-                <div className="task-title" style={{ color: "var(--color-task-title)" }}>
-                  {truncatedTitle || "(untitled)"}
-                </div>
-                {t.description ? <div className="task-desc">{t.description}</div> : null}
-                {t.status && (
-                  <div
-                    className="task-status"
-                    style={{ color: "var(--color-text-muted)", fontSize: "12px" }}
-                  >
-                    Status: {t.status}
-                  </div>
-                )}
+              <div
+                className="reorder-handle"
+                draggable
+                onMouseDown={(e) => { e.stopPropagation(); }}  // ВАЖНО: чтобы FC не схватил mousedown
+                onDragStart={(e) => handleReorderDragStart(e, t.id)}
+              >
+                ≡
               </div>
 
-              <div className="task-bar-row">
-                <div className="task-bar-container">
-                  <div
-                    className="task-bar-fill"
-                    style={{
-                      width: `${Math.min(100, ratio * 100)}%`,
-                      backgroundColor: barColor,
-                    }}
-                  />
+              <div className="task-content">
+                <div className="task-header">
+                  <div className="task-title" style={{ color: "var(--color-task-title)" }}>
+                    {truncatedTitle || "(untitled)"}
+                  </div>
+                  {t.description ? <div className="task-desc">{t.description}</div> : null}
+                  {t.status && (
+                    <div
+                      className="task-status"
+                      style={{ color: "var(--color-text-muted)", fontSize: "12px" }}
+                    >
+                      Status: {t.status}
+                    </div>
+                  )}
                 </div>
-                <div className="task-bar-label">
-                  {planned} / {t.estimateHours} hr
+
+                <div className="task-bar-row">
+                  <div className="task-bar-container">
+                    <div
+                      className="task-bar-fill"
+                      style={{
+                        width: `${Math.min(100, ratio * 100)}%`,
+                        backgroundColor: barColor,
+                      }}
+                    />
+                  </div>
+                  <div className="task-bar-label">
+                    {planned} / {t.estimateHours} hr
+                  </div>
                 </div>
               </div>
             </div>

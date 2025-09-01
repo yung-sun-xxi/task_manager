@@ -506,19 +506,6 @@ input[type="number"] {
   box-shadow: none !important;
 }
 
-/* ==== Today & Add Task: общий hover ==== */
-/* Today — оформим подобно tm-btn-primary:hover */
-.fc .fc-today-button {
-  border: 1px solid var(--color-button-save-border) !important;
-  background: var(--color-button-save-bg) !important;
-  color: var(--color-button-save-text) !important;
-  height: 36px; line-height: 36px; border-radius: 10px;
-}
-
-.fc .fc-today-button:hover {
-  background: var(--hover-primary-bg) !important; /* тот же токен, что у .tm-btn-primary:hover */
-}
-
 /* ==== Двухстрочный заголовок дней ==== */
 .fc .fc-col-header-cell .fc-day-two-line {
   line-height: 1.1;
@@ -584,3 +571,48 @@ input[type="number"] {
   color: var(--color-text) !important;
 }
 
+/* === Today = как у Add Task на ховере (ПРАВИЛЬНОЕ имя класса) === */
+html.theme-light .fc .fc-Today-button {
+  border: 1px solid var(--color-button-save-border) !important;
+  background: var(--color-button-save-bg) !important;
+  color: var(--color-button-save-text) !important;
+  height: 36px; line-height: 36px; border-radius: 10px;
+}
+
+html.theme-light .fc .fc-Today-button:hover,
+html.theme-light .fc .fc-Today-button:focus {
+  background: var(--hover-primary-bg) !important;   /* светло-розовый, как у Add Task hover */
+  border: 1px solid transparent !important;        /* убрать чёрную рамку */
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--color-button-save-text) !important;
+}
+
+/* spacer с плавной анимацией высоты */
+.kanban-placeholder {
+  width: 100%;
+}
+
+/* чуть смягчим перестройки карточек */
+.tm-task-item {
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+/* чуть смягчим перестройки карточек */
+.tm-task-item {
+  transition: transform 140ms ease, box-shadow 140ms ease;
+  will-change: transform; /* Оптимизация для плавного движения */
+}
+
+/* Стили для перетаскиваемой карточки */
+.tm-task-item.dragging {
+  position: absolute;
+  cursor: grabbing;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+/* spacer с плавной анимацией высоты */
+.kanban-placeholder {
+  width: 100%;
+}
