@@ -174,8 +174,38 @@ const CalendarView: React.FC<Props> = (props) => {
   // Форматер для второй строки заголовка (ММ ДД)
   const fmtMD = new Intl.DateTimeFormat(undefined, { month: "2-digit", day: "2-digit" });
 
+// ① внутри компонента CalendarView:
+const calendarRootRef = React.useRef<HTMLDivElement>(null);
+
+// Тогглим класс и на исходной карточке (.tm-task-item.dragging), и на фантоме (.tm-task-ghost)
+const toggleDraggingOverCalendar = React.useCallback((on: boolean) => {
+  const els = document.querySelectorAll<HTMLElement>(".tm-task-item.dragging, .tm-task-ghost");
+  els.forEach(el => el.classList.toggle("dragging-over-calendar", on));
+}, []);
+
+// ВАЖНО: поддержим и нативный DnD, и твой кастомный pointer-drag
+const handleEnter = React.useCallback(() => toggleDraggingOverCalendar(true), [toggleDraggingOverCalendar]);
+const handleLeave = React.useCallback(() => toggleDraggingOverCalendar(false), [toggleDraggingOverCalendar]);
+
+// Для нативного HTML5 DnD — разрешаем drop и держим подсветку
+const handleDragEnter = React.useCallback((e: React.DragEvent) => { e.preventDefault(); handleEnter(); }, [handleEnter]);
+const handleDragOver  = React.useCallback((e: React.DragEvent) => { e.preventDefault(); handleEnter(); }, [handleEnter]);
+const handleDragLeave = React.useCallback(() => { handleLeave(); }, [handleLeave]);
+const handleDrop      = React.useCallback((e: React.DragEvent) => { e.preventDefault(); handleLeave(); }, [handleLeave]);
+
 return (
-  <div className="calendar-wrapper">
+    <div
+      ref={calendarRootRef}
+      className="calendar-wrapper"
+      onPointerEnter={handleEnter}
+      onPointerLeave={handleLeave}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
     <FullCalendar
       /* === Фикс заголовков столбцов: DD/MM и двухстрочный вид === */
       views={{
@@ -252,7 +282,6 @@ return (
       eventReceive={handleEventReceive}
       eventDidMount={eventDidMount}
       height="100%"
-      themeSystem="bootstrap5"
       eventClassNames="my-event"
     />
   </div>

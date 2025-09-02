@@ -25,6 +25,7 @@ html.theme-light {
     --pink-20:     rgba(245, 100, 118, 0.20);
     --mulberry-16: rgba(190, 62, 130, 0.16);
     --cerise-16:   rgba(228, 63, 111, 0.16);
+    --cerise-light:#E43F6F80;   
 
     /* Upper divider */
     --color-divider: var(--eggplant);   
@@ -32,7 +33,7 @@ html.theme-light {
     /* ------------------------------------ */
     /* 1. General App Colors                */
     /* ------------------------------------ */
-    --color-bg-app: #F6E3DF;             /* light background for contrast */
+    --color-bg-app: var(--pale-dogwood);             /* light background for contrast */
     --color-text-primary: var(--black);  /* main text */
     --color-text-muted: var(--eggplant-80); /* secondary/muted text */
     --color-primary: var(--bright-pink); /* brand/accent elements */
@@ -41,7 +42,7 @@ html.theme-light {
     /* 2. Sidebar Elements                  */
     /* ------------------------------------ */
     --color-sidebar-bg: #F6E3DF;                   /* sidebar background */
-    --color-task-card-bg: var(--white);            /* task cards background */
+    --color-task-card-bg: var(--bright-pink);            /* task cards background */
     --color-task-card-border: var(--eggplant-12);  /* subtle border */
     --color-task-card-shadow: 0 4px 14px var(--mulberry-16);
 
@@ -93,7 +94,7 @@ html.theme-light {
 
     /* --- "Delete task" Button --- */
     --color-button-delete-text: var(--black);
-    --color-button-delete-bg: var(--cerise);
+    --color-button-delete-bg: var(--mulberry);
     --color-button-delete-border: transparent;
 
     /* --- "Cancel" Button --- */
@@ -109,5 +110,8 @@ html.theme-light {
     /* Optional hover states */
     --hover-primary-bg: #ff7486;  /* hover for primary buttons */
     --hover-secondary-bg: #cc2e77; /* hover for secondary elements */
+
+    /* Task background when dragging over calendar  */
+    --color-task-card-bg-drag-over-calendar: var(--cerise-light);
 }
 
