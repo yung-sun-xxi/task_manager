@@ -28,15 +28,16 @@ type DragState = {
   startY: number;
   elW: number;
   elH: number;
-  started: boolean;       // true => мы в режиме REORDER (pointer-DnD с ghost)
+  started: boolean;       // true => режим REORDER (pointer DnD с ghost)
   stackStep: number;
   grabOffsetX: number;
   grabOffsetY: number;
 };
 
-const DRAG_THRESHOLD_Y = 7;    // вертикальный порог для реордера
-const INTENT_X_TO_CAL = 24;    // горизонтальный порог "в календарь"
-const EXIT_SIDEBAR_MARGIN = 8; // дополнительный буфер у правого края
+const DRAG_THRESHOLD_Y = 7;        // вертикальный порог для реордера
+const INTENT_X_TO_CAL = 24;        // горизонтальный порог "в календарь"
+const EXIT_SIDEBAR_MARGIN = 8;     // буфер у правого края сайдбара
+const RETURN_MARGIN = 12;          // гистерезис при возврате в сайдбар (чтобы не мигало)
 
 const Sidebar: React.FC<Props> = ({
   tasks,
@@ -53,34 +54,40 @@ const Sidebar: React.FC<Props> = ({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [hoverPos, setHoverPos] = useState<"before" | "after">("before");
 
-  // режимы намерений
-  const delegatedToCalendarRef = useRef(false); // если true — отдали управление FullCalendar'у
+  // refs для режимов и DOM
+  const delegatedToCalendarRef = useRef(false);
   const originElRef = useRef<HTMLElement | null>(null);
   const ghostElRef = useRef<HTMLElement | null>(null);
 
+  const prevYRef = useRef<number | null>(null);
+
+  // глобальные слушатели для сценария "в календарь"
+  const globalMoveRef = useRef<(ev: PointerEvent) => void>();
+  const globalUpRef = useRef<(ev: PointerEvent) => void>();
+
   // ========= FullCalendar external draggable =========
-  // ДАЁМ FC слушать как тело карточки, так и ручку.
-  useEffect(() => {
-    const el = listRef.current;
-    if (!el) return;
-    const draggable = new Draggable(el, {
-      itemSelector: ".to-calendar, .to-calendar-handle",
-      eventData: (eventEl) => {
-        const node = (eventEl as HTMLElement).closest(".tm-task-item") as HTMLElement | null;
-        const id = node?.dataset.taskId || "";
-        const title = node?.dataset.title || "";
-        const color = node?.dataset.color || undefined;
-        return {
-          id,
-          title,
-          backgroundColor: color,
-          borderColor: color,
-          extendedProps: { taskId: id },
-        };
-      },
-    });
-    return () => draggable.destroy();
-  }, [tasks]);
+useEffect(() => {
+  const el = listRef.current;
+  if (!el) return;
+  const draggable = new Draggable(el, {
+    // вся карточка — источник для календаря
+    itemSelector: ".tm-task-item",
+    eventData: (eventEl) => {
+      const node = (eventEl as HTMLElement).closest(".tm-task-item") as HTMLElement | null;
+      const id = node?.dataset.taskId || "";
+      const title = node?.dataset.title || "";
+      const color = node?.dataset.color || undefined;
+      return {
+        id,
+        title,
+        backgroundColor: color,
+        borderColor: color,
+        extendedProps: { taskId: id },
+      };
+    },
+  });
+  return () => draggable.destroy();
+}, [tasks]);
 
   const items = useMemo(() => tasks, [tasks]);
   const makeIds = useCallback(() => items.map(t => t.id), [items]);
@@ -123,7 +130,9 @@ const Sidebar: React.FC<Props> = ({
     return ghost;
   }
 
-  function moveGhost(ghost: HTMLElement, x: number, y: number, offsetX: number, offsetY: number) {
+  function moveGhostXY(x: number, y: number, offsetX: number, offsetY: number) {
+    const ghost = ghostElRef.current;
+    if (!ghost) return;
     ghost.style.left = `${Math.round(x - offsetX)}px`;
     ghost.style.top = `${Math.round(y - offsetY)}px`;
   }
@@ -133,20 +142,82 @@ const Sidebar: React.FC<Props> = ({
     ghostElRef.current = null;
   }
 
-  // ===== Intent detection: решаем, куда хочет пользователь =====
+  // глобальные лиснеры для preview-ghost при переносе в календарь
+  function startGlobalPreviewListeners() {
+    if (globalMoveRef.current || globalUpRef.current) return;
+
+    globalMoveRef.current = (ev: PointerEvent) => {
+      if (!delegatedToCalendarRef.current || !drag) return;
+      moveGhostXY(ev.clientX, ev.clientY, drag.grabOffsetX, drag.grabOffsetY);
+    };
+
+    globalUpRef.current = (_ev: PointerEvent) => {
+      // Завершение: убираем preview в любом исходе (FC обработает дроп сам)
+      stopCalendarPreview();
+      setDrag(null);
+      setHoverIndex(null);
+      originElRef.current = null;
+    };
+
+    window.addEventListener("pointermove", globalMoveRef.current, { passive: true });
+    window.addEventListener("pointerup", globalUpRef.current, { passive: true });
+    window.addEventListener("pointercancel", globalUpRef.current as any, { passive: true });
+  }
+
+  function stopGlobalPreviewListeners() {
+    if (globalMoveRef.current) {
+      window.removeEventListener("pointermove", globalMoveRef.current);
+      globalMoveRef.current = undefined;
+    }
+    if (globalUpRef.current) {
+      window.removeEventListener("pointerup", globalUpRef.current);
+      window.removeEventListener("pointercancel", globalUpRef.current as any);
+      globalUpRef.current = undefined;
+    }
+  }
+
+  function startCalendarPreview(e: React.PointerEvent) {
+    const origin = originElRef.current;
+    if (!origin) return;
+    if (!ghostElRef.current) {
+      const ghost = createGhostFrom(origin);
+      ghostElRef.current = ghost;
+      origin.style.visibility = "hidden"; // чтобы не было дубля
+    }
+    delegatedToCalendarRef.current = true;
+    moveGhostXY(e.clientX, e.clientY, drag!.grabOffsetX, drag!.grabOffsetY);
+    startGlobalPreviewListeners(); // двигаем ghost даже за пределами сайдбара
+    // без pointer capture — FC продолжает получать drag
+  }
+
+  function stopCalendarPreview() {
+    destroyGhost();
+    const origin = originElRef.current;
+    if (origin) origin.style.visibility = "";
+    delegatedToCalendarRef.current = false;
+    stopGlobalPreviewListeners();
+  }
+
+  // определение намерений
   function wantsCalendar(e: React.PointerEvent) {
     const sidebar = listRef.current?.getBoundingClientRect();
     if (!sidebar) return false;
     const dx = e.clientX - (drag?.startX ?? e.clientX);
-    const leftBound = sidebar.right - EXIT_SIDEBAR_MARGIN; // почти у правого края
+    const leftBound = sidebar.right - EXIT_SIDEBAR_MARGIN;
     const exitedRight = e.clientX > leftBound;
     return Math.abs(dx) > INTENT_X_TO_CAL || exitedRight;
   }
 
-  // ===== Pointer DnD только на ручке =====
+  function backInSidebar(e: React.PointerEvent) {
+    const sidebar = listRef.current?.getBoundingClientRect();
+    if (!sidebar) return true;
+    // чуть левее реальной границы, чтобы не мигало
+    return e.clientX < sidebar.right - RETURN_MARGIN;
+  }
+
+  // ===== Pointer DnD (ручка) =====
   const handlePointerDown = (e: React.PointerEvent, index: number, taskId: string) => {
-    // ВАЖНО: НЕ делаем preventDefault/stopPropagation и НЕ ставим setPointerCapture.
-    // Даём FullCalendar возможность тоже слушать события (на случай "в календарь").
+    // важно: не stopPropagation и не capture — даём шанс FC
     const el = document.getElementById(`task-${taskId}`) as HTMLElement | null;
     if (!el) return;
 
@@ -164,11 +235,12 @@ const Sidebar: React.FC<Props> = ({
       startY: e.clientY,
       elW: Math.round(r.width),
       elH: Math.round(r.height),
-      started: false, // пока никуда не поехали
+      started: false,
       stackStep: measureStackStep(el),
       grabOffsetX,
       grabOffsetY,
     });
+    prevYRef.current = e.clientY;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -176,91 +248,95 @@ const Sidebar: React.FC<Props> = ({
     const origin = originElRef.current;
     if (!origin) return;
 
-    // Если мы уже делегировали в календарь — выходим (FC дальше рулит)
-    if (delegatedToCalendarRef.current) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
 
-    // Пока не стартовали наш REORDER — определяем намерение
-    if (!drag.started) {
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
-
-      // Намерение: в календарь
-      if (wantsCalendar(e)) {
-        // НИЧЕГО не делаем: не скрываем origin, не создаём ghost, не захватываем pointer.
-        // Просто помечаем, что мы больше не вмешиваемся — дальше FullCalendar Draggable возьмёт управление.
-        delegatedToCalendarRef.current = true;
-
-        // Добавим классы, чтобы визуально дать фидбек (опционально):
-        // origin.classList.add("delegated-to-calendar");
+    // === если сейчас в режиме "календарь превью" ===
+    if (delegatedToCalendarRef.current) {
+      // если вернулись в зону сайдбара — отключаем превью и возвращаемся к обычной логике
+      if (backInSidebar(e)) {
+        stopCalendarPreview();
+        // НЕ делаем capture — до тех пор, пока явно не начнётся реордер
+      } else {
+        // остаёмся в превью; глобальные window.pointermove уже двигают ghost
         return;
       }
+    }
 
-      // Намерение: реордер (существенное вертикальное движение)
+    // === ещё не стартовали наш REORDER — решаем намерение
+    if (!drag.started) {
+      // 1) намерение: в календарь
+      if (wantsCalendar(e)) {
+        startCalendarPreview(e);
+        return;
+      }
+      // 2) намерение: реордер (вертикаль доминирует)
       if (Math.abs(dy) >= DRAG_THRESHOLD_Y && Math.abs(dy) >= Math.abs(dx)) {
-        // Стартуем наш pointer-DnD
         const ghost = createGhostFrom(origin);
         ghostElRef.current = ghost;
-        origin.style.visibility = "hidden"; // оставляем в потоке
+        origin.style.visibility = "hidden";
         document.body.style.userSelect = "none";
-
-        moveGhost(ghost, e.clientX, e.clientY, drag.grabOffsetX, drag.grabOffsetY);
-
-        // Теперь захватываем pointer (чтобы наш реордер был стабильным)
-        (e.target as Element).setPointerCapture?.(e.pointerId);
-
+        (e.target as Element).setPointerCapture?.(e.pointerId); // теперь реордер — наш
+        moveGhostXY(e.clientX, e.clientY, drag.grabOffsetX, drag.grabOffsetY);
         setDrag({ ...drag, started: true });
         return;
       }
-
-      // иначе — ещё «ждём» намерение
+      // иначе — ждём
       return;
     }
 
-    // === Уже в режиме REORDER (ghost) ===
-    if (ghostElRef.current) {
-      moveGhost(ghostElRef.current, e.clientX, e.clientY, drag.grabOffsetX, drag.grabOffsetY);
-    }
+    // === режим REORDER (ghost под курсором)
+    moveGhostXY(e.clientX, e.clientY, drag.grabOffsetX, drag.grabOffsetY);
 
-    // считаем целевую позицию среди карточек
+    // направление движения
+    const lastY = prevYRef.current ?? e.clientY;
+    const dirDown = e.clientY > lastY;
+    prevYRef.current = e.clientY;
+
+    // Порог "before" в зависимости от направления:
+    // вниз хотим ранний триггер → 0.35
+    // вверх оставляем твой референс → 0.65
+    const threshold = dirDown ? 0.005 : 0.65;
+
     const listEl = listRef.current;
     if (!listEl) return;
-    const cards = Array.from(listEl.querySelectorAll<HTMLElement>(".tm-task-item"));
 
-    if (cards.length === 0) {
-      setHoverIndex(null);
-      return;
-    }
+    // работаем со всеми карточками в DOM (оригинал мы пропускаем в цикле)
+    const cards = Array.from(listEl.querySelectorAll<HTMLElement>(".tm-task-item"));
+    if (cards.length === 0) { setHoverIndex(null); return; }
 
     let idx = cards.length - 1;
     let pos: "before" | "after" = "after";
+
     for (let i = 0; i < cards.length; i++) {
-      if (cards[i] === origin) continue; // он скрыт, но пусть будет
+      if (cards[i] === origin) continue; // пропускаем скрытый оригинал
       const rect = cards[i].getBoundingClientRect();
-      if (e.clientY < rect.top + rect.height / 2) {
+
+      // «вставить ПЕРЕД этой карточкой», когда курсор заходит в её верхние threshold%
+      const cut = rect.top + rect.height * threshold;
+      if (e.clientY < cut) {
         idx = i;
         pos = "before";
         break;
       }
     }
+
     setHoverIndex(idx);
     setHoverPos(pos);
   };
 
   const handlePointerUp = () => {
-    const origin = originElRef.current;
-
-    // Если делегировали в календарь — FullCalendar сам завершит перетаскивание.
+    prevYRef.current = null;
+    // если делегировали в календарь — FC завершит drop; мы только чистим превью
     if (delegatedToCalendarRef.current) {
-      delegatedToCalendarRef.current = false;
+      stopCalendarPreview();
       setDrag(null);
       setHoverIndex(null);
       originElRef.current = null;
-      destroyGhost();
-      document.body.style.userSelect = "";
       return;
     }
 
-    // Если шёл REORDER
+    const origin = originElRef.current;
     if (origin) origin.style.visibility = "";
     destroyGhost();
     document.body.style.userSelect = "";
@@ -286,17 +362,17 @@ const Sidebar: React.FC<Props> = ({
   };
 
   const handlePointerCancel = () => {
+    prevYRef.current = null;
+    stopCalendarPreview();
     const origin = originElRef.current;
     if (origin) origin.style.visibility = "";
-    destroyGhost();
     document.body.style.userSelect = "";
-    delegatedToCalendarRef.current = false;
     setDrag(null);
     setHoverIndex(null);
     originElRef.current = null;
   };
 
-  // ====== анимация разъезда соседей ======
+  // ====== анимация разъезда соседей (FLIP) ======
   const getTranslateY = (i: number): number => {
     if (!drag || !drag.started || hoverIndex === null) return 0;
 
@@ -365,25 +441,27 @@ const Sidebar: React.FC<Props> = ({
               data-title={t.title}
               data-color={eventColor}
               onDoubleClick={() => onTaskDblClick?.(t.id)}
+              // → вот ЭТИ четыре:
+              onPointerDown={(e) => {
+                // левая кнопка, без “исключённых” элементов
+                if (e.button !== 0) return;
+                if ((e.target as HTMLElement).closest("[data-drag-exempt]")) return;
+                handlePointerDown(e, i, t.id);
+              }}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
               style={{
                 transform: `translateY(${getTranslateY(i)}px)`,
                 transition: drag?.started ? "transform 140ms ease" : undefined,
               }}
             >
-              {/* Ручка: теперь и reorder, и источник для календаря */}
-              <div
-                className="reorder-handle to-calendar-handle"
-                // ВАЖНО: не вызываем preventDefault/stopPropagation в onPointerDown
-                onPointerDown={(e) => handlePointerDown(e, i, t.id)}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
-                title="Drag to reorder or drop onto calendar"
-              >
+              {/* Универсальная ручка: reorder + источник для календаря */}
+              <div className="reorder-handle" title="Drag">
                 ≡
               </div>
 
-              {/* Контент: по-прежнему источник для календаря */}
+              {/* Контент: источник для календаря */}
               <div className="task-content to-calendar">
                 <div className="task-header">
                   <div className="task-title" style={{ color: "var(--color-task-title)" }}>

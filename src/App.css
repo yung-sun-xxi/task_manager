@@ -650,6 +650,7 @@ html.theme-light .fc .fc-Today-button:focus {
 /* исходная карточка остаётся на месте, просто прячется */
 .tm-task-item.dragging-origin {
   visibility: visible; /* будет переключаться inline-стилем на hidden только в момент старта */
+  will-change: transform;
 }
 
 /* фантом, который катается за курсором */
@@ -657,8 +658,10 @@ html.theme-light .fc .fc-Today-button:focus {
   pointer-events: none;
   border-radius: 12px; /* под твой стиль */
   background: var(--color-task-card-bg, #fff);
+  opacity: 0.98;
 }
 
 /* ручка */
 .reorder-handle { cursor: grab; user-select: none; padding: 4px 6px; touch-action: none; }
 .reorder-handle:active { cursor: grabbing; }
+
