@@ -6,6 +6,7 @@ import KanbanBoard from "./components/KanbanBoard";
 import "./index.css";
 import "./App.css";
 import { loadStatuses } from "./utils/store";
+import ExplosionIcon from "./assets/explosion.png";
 
 /** Theme files */
 import "./themes/theme-light.css";
@@ -15,71 +16,65 @@ import "./themes/theme-sunny-pump.css";
 const LS_TASKS = "tm_tasks_v1";
 const LS_EVENTS = "tm_events_v1";
 const LS_THEME = "tm_theme_v1";
-const LS_STATUSES = "tm.statuses.v1";
 
-/** Register available themes (id matches the suffix in html.theme-<id>) */
+/** THEMES for quick toggle / long-press menu */
 const THEMES = [
-  { id: "light", label: "Light" },
-  { id: "dark", label: "Dark (all black)" },
-  { id: "sunny-pump", label: "Sunny Pump" },
+  { id: "light", title: "Light" },
+  { id: "dark", title: "Dark" },
+  { id: "sunny-pump", title: "Sunny Pump" },
 ];
 
-const saveStatuses = (arr: string[]) => {
-  try {
-    localStorage.setItem(LS_STATUSES, JSON.stringify(arr));
-  } catch {}
-};
-
-function loadTasks(): Task[] {
-  try {
-    const raw = localStorage.getItem(LS_TASKS);
-    if (raw) return JSON.parse(raw);
-  } catch { }
-  return [];
-}
-function loadEvents(): PlainEvent[] {
-  try {
-    const raw = localStorage.getItem(LS_EVENTS);
-    if (raw) return JSON.parse(raw);
-  } catch { }
-  return [];
-}
-function saveTasks(tasks: Task[]) {
-  try { localStorage.setItem(LS_TASKS, JSON.stringify(tasks)); } catch { }
-}
-function saveEvents(events: PlainEvent[]) {
-  try { localStorage.setItem(LS_EVENTS, JSON.stringify(events)); } catch { }
-}
-function genId(prefix: string) {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
 }
 
-// Now this function is not needed because we are using maxLength
-function truncateTitle(title: string): string {
-  if (title.length > 50) {
-    return title.slice(0, 47) + "...";
+function load<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
   }
-  return title;
+}
+
+function save<T>(key: string, value: T) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+/** reorder tasks by list of ids (used by Sidebar internal reorder) */
+function reorderByIds(tasks: Task[], newOrderIds: string[]): Task[] {
+  const map = new Map(tasks.map((t) => [t.id, t]));
+  const next: Task[] = [];
+  for (const id of newOrderIds) {
+    const t = map.get(id);
+    if (t) next.push(t);
+  }
+  // add leftovers (if any)
+  for (const t of tasks) {
+    if (!next.find((x) => x.id === t.id)) next.push(t);
+  }
+  return next;
+}
+
+/** convert minutes to hours with quarter precision (0.25h = 15 min) */
+function minutesToHoursQuarter(mins: number): number {
+  return Math.round((mins / 60) * 4) / 4;
 }
 
 const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
-  const [events, setEvents] = useState<PlainEvent[]>(() => loadEvents());
-  const [statuses, setStatuses] = useState<string[]>(() => {
-    const fromLs = loadStatuses();
-    if (fromLs.length) return fromLs;
-    return Array.from(new Set(
-      (Array.isArray(tasks) ? tasks : [])
-        .map(t => (t.status || "").trim())
-        .filter(s => s.length > 0)
-    ));
-  });
-  const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
+  // tasks + events
+  const [tasks, setTasks] = useState<Task[]>(() => load<Task[]>(LS_TASKS, []));
+  const [events, setEvents] = useState<PlainEvent[]>(() =>
+    load<PlainEvent[]>(LS_EVENTS, [])
+  );
 
-  // new state to manage which view is active
-  const [currentPage, setCurrentPage] = useState<"calendar" | "kanban">("calendar");
+  // statuses from utils store (persisted)
+  const [statuses, setStatuses] = useState<string[]>(() => loadStatuses());
 
-  // modal state
+  // UI state
   const [isTaskModalOpen, setTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
@@ -121,46 +116,70 @@ const App: React.FC = () => {
     end: null,
   });
 
-  // режим создания (когда открываем модалку БЕЗ существующей задачи)
-  const [isCreating, setIsCreating] = useState(false);
+  // delete-all confirm modal
+  const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
-  // persist tasks/events как раньше
-  useEffect(() => saveTasks(tasks), [tasks]);
-  useEffect(() => saveEvents(events), [events]);
+  // new state to manage which view is active
+  const [currentPage, setCurrentPage] = useState<"calendar" | "kanban">("calendar");
 
-  // пересчёт и сохранение статусов КАЖДЫЙ раз при изменении задач
-  useEffect(() => {
-    const next = Array.from(
-      new Set(
-        tasks
-          .map(t => (t.status || "").trim())
-          .filter(s => s.length > 0)
-      )
-    );
-
-    setStatuses(prev => {
-      const same = prev.length === next.length && prev.every((v, i) => v === next[i]);
-      if (!same) {
-        saveStatuses(next);   // <-- сюда летит уже пересчитанный массив
-        return next;
+  // allocations map (taskId => total scheduled minutes)
+  const allocations: Record<string, number> = useMemo(() => {
+    const acc: Record<string, number> = {};
+    for (const ev of events) {
+      const tId = (ev as any).taskId as string | undefined;
+      if (!tId || !ev.start || !ev.end) continue;
+      const start = new Date(ev.start).getTime();
+      const end = new Date(ev.end).getTime();
+      if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+        const mins = Math.max(0, Math.round((end - start) / (60 * 1000)));
+        acc[tId] = (acc[tId] || 0) + mins;
       }
-      return prev;
-    });
-  }, [tasks]);
-
-  // keep modal draft in sync with actual task while open
-  useEffect(() => {
-    if (!isTaskModalOpen || !editingTaskId) return;
-    const t = tasks.find(x => x.id === editingTaskId);
-    if (t) {
-      setDraftTitle(t.title);
-      setDraftDescription(t.description || "");
-      setDraftEstimate(t.estimateHours || 0);
-      setDraftStatus(t.status || "");
     }
-  }, [isTaskModalOpen, editingTaskId, tasks]);
+    return acc;
+  }, [events]);
 
-  // Handle Escape key to close modal / close menu
+  // persist tasks/events on change
+  useEffect(() => save(LS_TASKS, tasks), [tasks]);
+  useEffect(() => save(LS_EVENTS, events), [events]);
+
+  // === THEME TOGGLE / MENU HANDLERS ===
+  /** Quick toggle on short click (cycles through THEMES) */
+  const handleThemeClick = useCallback(() => {
+    if (pressedRef.current) return; // long-press already handled
+    if (Date.now() < suppressClickUntilRef.current) return;
+    const ids = THEMES.map(t => t.id);
+    const idx = ids.indexOf(theme);
+    const next = THEMES[(idx + 1) % THEMES.length]?.id || "light";
+    setTheme(next);
+  }, [theme]);
+
+  /** Long press to open menu (500ms) */
+  const handlePressStart = useCallback(() => {
+    pressedRef.current = false;
+    if (pressTimerRef.current) window.clearTimeout(pressTimerRef.current);
+    pressTimerRef.current = window.setTimeout(() => {
+      pressedRef.current = true;
+      setMenuOpen(true);
+      dragSelectActiveRef.current = true;
+      suppressClickUntilRef.current = Date.now() + 100;
+    }, 500);
+  }, []);
+
+  const handlePressEnd = useCallback(() => {
+    if (pressTimerRef.current) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    // selection happens on global mouseup/touchend
+  }, []);
+
+  const applyTheme = useCallback((id: string) => {
+    if (!id) return;
+    setTheme(id);
+    setMenuOpen(false);
+  }, []);
+
+  // close theme menu on ESC / modal close handled in a single keydown listener:
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -213,264 +232,121 @@ const App: React.FC = () => {
     };
   }, [menuOpen]);
 
-  // sidebar resize handlers
-  const handleMouseDown = useCallback(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  }, []);
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    setSidebarWidth(e.clientX);
-  }, []);
-  const handleMouseUp = useCallback(() => {
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', handleMouseUp);
-  }, [handleMouseMove]);
+  // === SIDEBAR RESIZE ===
+  const handleSidebarMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = sidebarWidth;
 
-  // allocations
-  const allocations: Record<string, number> = useMemo(() => {
-    const acc: Record<string, number> = {};
-    for (const ev of events) {
-      const tId = (ev as any).taskId as string | undefined;
-      if (!tId || !ev.start || !ev.end) continue;
-      const start = new Date(ev.start).getTime();
-      const end = new Date(ev.end).getTime();
-      const hours = Math.max(0, (end - start) / 36e5);
-      acc[tId] = (acc[tId] || 0) + hours;
-    }
-    for (const k of Object.keys(acc)) acc[k] = Math.round(acc[k] * 4) / 4;
-    return acc;
-  }, [events]);
+    const onMove = (move: MouseEvent) => {
+      const delta = move.clientX - startX;
+      setSidebarWidth((w) => clamp(startW + delta, 220, 500));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [sidebarWidth]);
 
-  // sidebar
-  const onEstimateChange = useCallback((taskId: string, estimateHours: number) => {
-    setTasks(prev => prev.map(t => (t.id === taskId ? { ...t, estimateHours } : t)));
-  }, []);
-
-  // calendar
-  const handleCalendarEventsChange = useCallback((next: PlainEvent[]) => {
-    setEvents(next);
-  }, []);
-
-  const handleCreateBySelect = useCallback((start: Date, end: Date) => {
-    // НЕ создаём задачу/событие!
-    setPendingSlot({ start, end });
-
-    // входим в режим создания
-    setIsCreating(true);
-    setEditingTaskId(null);
-
-    // пустые драфты
+  // === TASK MODAL ===
+  const openNewTaskModal = useCallback(() => {
     setDraftTitle("");
     setDraftDescription("");
     setDraftEstimate(0);
-    setDraftStatus("");
-
+    setDraftStatus(statuses[0] || "");
+    setEditingTaskId(null);
     setTaskModalOpen(true);
-  }, []);
+    setPendingNewTaskId("new");
+  }, [statuses]);
 
-  const handleEventDblClick = useCallback((taskId?: string) => {
-    if (!taskId) return;
-    const t = tasks.find(x => x.id === taskId);
+  const openEditTaskModal = useCallback((taskId: string) => {
+    const t = tasks.find((x) => x.id === taskId);
     if (!t) return;
     setEditingTaskId(t.id);
     setDraftTitle(t.title);
     setDraftDescription(t.description || "");
-    setDraftEstimate(t.estimateHours || 0);
+    setDraftEstimate(t.estimate || 0);
     setDraftStatus(t.status || "");
     setTaskModalOpen(true);
   }, [tasks]);
 
-  const openNewTaskModal = useCallback(() => {
-    // Create a placeholder task and open the same modal for editing
-    const id = genId('task');
-    const newTask = {
-      id,
-      title: "",
-      description: "",
-      estimateHours: 0,
-      status: ""
-    } as Task;
-    setTasks(prev => [newTask, ...prev]);
-    setEditingTaskId(id);
-    setDraftTitle("");
-    setDraftDescription("");
-    setDraftEstimate(0);
-    setDraftStatus("");
-    setPendingNewTaskId(id);
-    setTaskModalOpen(true);
-  }, [statuses]);
-
-  // modal actions
   const closeModal = useCallback(() => {
     setTaskModalOpen(false);
     setEditingTaskId(null);
-    setIsCreating(false);
+    setPendingNewTaskId(null);
     setPendingSlot({ start: null, end: null });
   }, []);
 
-const saveModal = useCallback(() => {
-  const title = draftTitle.trim();
-  const description = draftDescription.trim();
-  const estimate = Math.max(0, Math.round(Number(draftEstimate) * 4) / 4);
-  const status = (draftStatus || "").trim();
+  const saveModal = useCallback(() => {
+    const title = draftTitle.trim();
+    const description = draftDescription.trim();
+    const estimate = Math.max(0, Math.round(Number(draftEstimate) * 4) / 4);
+    const status = (draftStatus || "").trim();
 
-  // Title обязателен — без него просто закрываем без создания/сохранения
-  if (!title) {
-    // для обратной совместимости: если где-то раньше была создана "pending" задача — подчистим
-    if (typeof pendingNewTaskId !== "undefined" && pendingNewTaskId && editingTaskId === pendingNewTaskId) {
-      setTasks(prev => prev.filter(t => t.id !== pendingNewTaskId));
-      setEvents(prev => prev.filter(ev => (ev as any).taskId !== pendingNewTaskId));
-      setPendingNewTaskId?.(null as any); // если такого стейта нет — TS проигнорирует через any
+    // Title обязателен — без него просто закрываем без создания/сохранения
+    if (!title) {
+      // для обратной совместимости, просто закрываем
+      setTaskModalOpen(false);
+      setEditingTaskId(null);
+      setPendingNewTaskId(null);
+      setPendingSlot({ start: null, end: null });
+      return;
     }
 
-    // закрываем и чистим временные состояния
-    setIsCreating?.(false);
-    setPendingSlot?.({ start: null, end: null });
-    closeModal();
-    return;
-  }
+    if (editingTaskId) {
+      // edit existing
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === editingTaskId ? { ...t, title, description, estimate, status } : t
+        )
+      );
+    } else {
+      // create new
+      const id = String(Date.now());
+      const newTask: Task = {
+        id,
+        title,
+        description,
+        estimate,
+        status: status || (statuses[0] || ""),
+      };
+      setTasks((prev) => [newTask, ...prev]);
 
-  // === Режим редактирования существующей задачи ===
-  if (editingTaskId && !isCreating) {
-    setTasks(prev =>
-      prev.map(t =>
-        t.id === editingTaskId
-          ? { ...t, title, description, estimateHours: estimate, status }
-          : t
-      )
-    );
+      // если был выбран слот в календаре — создаём и событие
+      if (pendingSlot.start && pendingSlot.end) {
+        const ev: PlainEvent = {
+          id: String(Date.now() + 1),
+          title,
+          start: pendingSlot.start.toISOString(),
+          end: pendingSlot.end.toISOString(),
+          taskId: id,
+        };
+        setEvents((prev) => [ev, ...prev]);
+      }
+    }
 
-    // синхроним заголовок всех событий этой задачи
-    setEvents(prev => prev.map(ev => (ev.taskId === editingTaskId ? { ...ev, title } : ev)));
-
-    // финализация
-    setIsCreating(false);
+    // close
+    setTaskModalOpen(false);
+    setEditingTaskId(null);
+    setPendingNewTaskId(null);
     setPendingSlot({ start: null, end: null });
-    closeModal();
-    return;
-  }
+  }, [draftTitle, draftDescription, draftEstimate, draftStatus, editingTaskId, pendingSlot, statuses]);
 
-  // === Режим создания новой задачи ===
-  const newTaskId = `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  const deleteTask = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!editingTaskId) return;
+    const tId = editingTaskId;
+    setTasks((prev) => prev.filter((t) => t.id !== tId));
+    setEvents((prev) => prev.filter((ev) => (ev as any).taskId !== tId));
+    setTaskModalOpen(false);
+    setEditingTaskId(null);
+    setPendingNewTaskId(null);
+    setPendingSlot({ start: null, end: null });
+  }, [editingTaskId]);
 
-  const newTask: Task = {
-    id: newTaskId,
-    title,
-    description,
-    estimateHours: estimate,
-    status,
-  };
-  setTasks(prev => [newTask, ...prev]);
-
-  // Если календарь передал слот — создаём одно событие на этот интервал
-  if (pendingSlot?.start && pendingSlot?.end) {
-    const newEvent: PlainEvent = {
-      id: `ev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-      title,
-      start: pendingSlot.start.toISOString(),
-      end: pendingSlot.end.toISOString(),
-      taskId: newTaskId,
-    };
-    setEvents(prev => [...prev, newEvent]);
-  }
-
-  // финализация
-  setIsCreating(false);
-  setPendingSlot({ start: null, end: null });
-
-  // если оставался старый pendingNewTaskId — подчистим для совместимости
-  if (typeof pendingNewTaskId !== "undefined" && pendingNewTaskId) {
-    setPendingNewTaskId?.(null as any);
-  }
-
-  closeModal();
-}, [
-  draftTitle,
-  draftDescription,
-  draftEstimate,
-  draftStatus,
-  editingTaskId,
-  isCreating,
-  pendingSlot?.start,
-  pendingSlot?.end,
-  setTasks,
-  setEvents,
-  closeModal,
-  // ниже — если этих сеттеров/стейтов нет в твоём файле, TS не упадёт благодаря опциональным вызовам выше
-  // @ts-ignore
-  setIsCreating,
-  // @ts-ignore
-  setPendingSlot,
-  // @ts-ignore
-  pendingNewTaskId,
-  // @ts-ignore
-  setPendingNewTaskId,
-]);
-
-  const deleteTask = useCallback((e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    const id = editingTaskId;
-    if (!id) return;
-
-    // remove from tasks
-    const nextTasks = tasks.filter(t => t.id !== id);
-    setTasks(nextTasks);
-    saveTasks(nextTasks);
-
-    // remove related events
-    const nextEvents = events.filter(ev => (ev as any).taskId !== id);
-    setEvents(nextEvents);
-    if (pendingNewTaskId === editingTaskId) setPendingNewTaskId(null);
-    saveEvents(nextEvents);
-
-    setCalReset(n => n + 1);
-    closeModal();
-  }, [editingTaskId, tasks, events, closeModal]);
-
-  const handleDeleteAllTasks = useCallback(() => {
-    setTasks([]);
-    setEvents([]);
-    setStatuses([]);
-    setConfirmModalOpen(false);
-  }, []);
-
-  /** Quick toggle on short click (cycles through THEMES) */
-  const handleThemeClick = useCallback(() => {
-    if (pressedRef.current) return; // long-press already handled
-    if (Date.now() < suppressClickUntilRef.current) return;
-    const ids = THEMES.map(t => t.id);
-    const idx = ids.indexOf(theme);
-    const next = THEMES[(idx + 1) % THEMES.length]?.id || "light";
-    setTheme(next);
-  }, [theme]);
-
-  /** Long press to open menu (500ms) */
-  const handlePressStart = useCallback(() => {
-    pressedRef.current = false;
-    if (pressTimerRef.current) window.clearTimeout(pressTimerRef.current);
-    pressTimerRef.current = window.setTimeout(() => {
-      pressedRef.current = true;
-      setMenuOpen(true);
-      dragSelectActiveRef.current = true;
-      suppressClickUntilRef.current = Date.now() + 100;
-    }, 500);
-  }, []);
-
-  const handlePressEnd = useCallback(() => {
-    if (pressTimerRef.current) {
-      window.clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-    // selection happens on global mouseup/touchend
-  }, []);
-
-  const applyTheme = useCallback((id: string) => {
-    setTheme(id);
-    setMenuOpen(false);
-  }, []);
-
-  /*** NEW: Kanban drop handler — reorder within column & move across statuses ***/
+  // Kanban drop handler
   const handleKanbanDrop = useCallback((payload: {
     taskId: string;
     fromStatus: string;
@@ -493,19 +369,20 @@ const saveModal = useCallback(() => {
       const srcList = byStatus[fromStatus] ?? [];
       const dstList = byStatus[toStatus] ?? [];
 
-      // Find the moving task and remove from source
-      let moving = srcList[fromIndex];
+      // find task
+      const moving = srcList[fromIndex];
       if (!moving || moving.id !== taskId) {
-        const idx = srcList.findIndex((x) => x.id === taskId);
-        if (idx === -1) return prev; // nothing to do
-        moving = srcList[idx];
-        srcList.splice(idx, 1);
+        // fallback: find by id
+        const idx = srcList.findIndex((t) => t.id === taskId);
+        if (idx >= 0) {
+          srcList.splice(idx, 1);
+        }
       } else {
         srcList.splice(fromIndex, 1);
       }
 
-      // Clamp destination index
-      if (fromStatus === toStatus) {
+      // clamp toIndex
+      if (toStatus === fromStatus) {
         if (toIndex > srcList.length) toIndex = srcList.length;
       } else {
         if (toIndex > dstList.length) toIndex = dstList.length;
@@ -525,46 +402,84 @@ const saveModal = useCallback(() => {
     });
   }, [statuses]);
 
-  /*** Soft-migrate old tasks that might not have a status ***/
+  // recalc statuses list whenever tasks change (unique list, preserve order as encountered)
   useEffect(() => {
-    if (!statuses?.length) return;
-    setTasks((prev) =>
-      prev.map((t) => (t.status ? t : { ...t, status: statuses[0] }))
+    const next = Array.from(
+      new Set(
+        tasks
+          .map(t => (t.status || "").trim())
+          .filter(s => s.length > 0)
+      )
     );
+
+    setStatuses(prev => {
+      const same = prev.length === next.length && prev.every((v, i) => v === next[i]);
+      if (!same) {
+        saveStatuses(next);   // <-- сюда летит уже пересчитанный массив
+        return next;
+      }
+      return prev;
+    });
+  }, [tasks]);
+
+  // keep modal draft in sync with actual task while open
+  useEffect(() => {
+    if (!isTaskModalOpen || !editingTaskId) return;
+    const t = tasks.find(x => x.id === editingTaskId);
+    if (!t) return;
+    setDraftTitle(t.title);
+    setDraftDescription(t.description || "");
+    setDraftEstimate(t.estimate || 0);
+    setDraftStatus(t.status || "");
+  }, [isTaskModalOpen, editingTaskId, tasks]);
+
+  // === DELETE ALL ===
+  const handleDeleteAllTasks = useCallback(() => {
+    setTasks([]);
+    setEvents([]);
+    setStatuses([]);
+    setConfirmModalOpen(false);
+    try {
+      localStorage.removeItem(LS_TASKS);
+      localStorage.removeItem(LS_EVENTS);
+    } catch {}
+    setCalReset(n => n + 1);
+  }, []);
+
+  // === ESTIMATE CHANGE (from sidebar) ===
+  const onEstimateChange = useCallback((taskId: string, hours: number) => {
+    const h = Math.max(0, Math.round(hours * 4) / 4);
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, estimate: h } : t));
+  }, []);
+
+  // === CALENDAR EVENTS CHANGE CALLBACK ===
+  const onEventsChange = useCallback((evs: PlainEvent[]) => {
+    setEvents(evs);
+  }, []);
+
+  // === EVENT DBLCLICK -> OPEN TASK MODAL ===
+  const handleEventDblClick = useCallback((taskId: string) => {
+    openEditTaskModal(taskId);
+  }, [openEditTaskModal]);
+
+  // === CALENDAR SELECT SLOT ===
+  const handleSelectSlot = useCallback((range: { start: Date; end: Date }) => {
+    setPendingSlot(range);
+    setEditingTaskId(null);
+    setDraftTitle("");
+    setDraftDescription("");
+    setDraftEstimate(minutesToHoursQuarter((range.end.getTime() - range.start.getTime()) / 60000));
+    setDraftStatus(statuses[0] || "");
+    setTaskModalOpen(true);
+    setPendingNewTaskId("new");
   }, [statuses]);
 
+  // === RENDER ===
   return (
     <div className="app-shell">
-      {/* Navigation buttons to switch views */}
-      <div className="view-switcher-container">
-        {/* ЛЕВАЯ ГРУППА: две кнопки вместе */}
-        <div className="left-actions">
-          <button
-            className={`view-switcher-btn ${currentPage === "calendar" ? "is-active" : ""}`}
-            onClick={() => setCurrentPage("calendar")}
-          >
-            Calendar
-          </button>
-          <button
-            className={`view-switcher-btn ${currentPage === "kanban" ? "is-active" : ""}`}
-            onClick={() => setCurrentPage("kanban")}
-          >
-            Kanban Board
-          </button>
-        </div>
-
-        {/* ЦЕНТР */}
-        <div className="center-actions">
-          <button
-            className="tm-btn tm-btn-danger"
-            onClick={() => setConfirmModalOpen(true)}
-          >
-            Delete All Tasks
-          </button>
-        </div>
-
-        {/* Правая часть: кнопка переключения темы */}
-        <div className="right-actions">
+      {/* Верхняя панель настроек */}
+      <div className="settings-bar">
+        <div className="settings-left">
           <button
             className="theme-toggle-btn"
             onClick={handleThemeClick}
@@ -580,9 +495,36 @@ const saveModal = useCallback(() => {
             {theme === "light" ? "🌙 Dark" : "☀️ Light"}
           </button>
         </div>
+          <div className="settings-right">
+            <button
+              className="icon-btn delete-btn"
+              onClick={() => setConfirmModalOpen(true)}
+              aria-label="Delete all tasks"
+              title="Delete all tasks"
+              type="button"
+            >
+              <img src={ExplosionIcon} alt="" />
+            </button>
+          </div>
+                </div>
+
+      {/* Вкладки (Safari-style) */}
+      <div className="tabs-bar">
+        <button
+          className={`tab-btn ${currentPage === "calendar" ? "is-active" : ""}`}
+          onClick={() => setCurrentPage("calendar")}
+        >
+          Calendar
+        </button>
+        <button
+          className={`tab-btn ${currentPage === "kanban" ? "is-active" : ""}`}
+          onClick={() => setCurrentPage("kanban")}
+        >
+          Kanban Board
+        </button>
       </div>
 
-      {/* Main content area below the view switcher */}
+      {/* Main content area below the view/tabs */}
       <div className="main-content-row">
         {currentPage === "calendar" && (
           <>
@@ -591,36 +533,34 @@ const saveModal = useCallback(() => {
                 tasks={tasks}
                 allocations={allocations}
                 onEstimateChange={onEstimateChange}
-                onTaskDblClick={handleEventDblClick}
-                onOpenCreate={() => {
-                  setIsCreating(true);
-                  setEditingTaskId(null);
-                  setPendingSlot({ start: null, end: null });
-
-                  setDraftTitle("");
-                  setDraftDescription("");
-                  setDraftEstimate(0);
-                  setDraftStatus("");
-
-                  setTaskModalOpen(true);
-                }}
-                statuses={statuses}
+                onAddTask={openNewTaskModal}
+                onEditTask={openEditTaskModal}
+                onReorder={ids => setTasks(prev => reorderByIds(prev, ids))}
               />
-              <div className="sidebar-resizer" onMouseDown={handleMouseDown}></div>
+              {/* Sidebar resizer */}
+              <div
+                className="sidebar-resizer"
+                onMouseDown={handleSidebarMouseDown}
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize sidebar"
+              />
             </div>
+
             <div className="main">
-              <CalendarView
-                key={calReset}
-                events={events}
-                onEventsChange={handleCalendarEventsChange}
-                tasksById={new Map(tasks.map(t => [t.id, t]))}
-                onCreateBySelect={handleCreateBySelect}
-                onEventDblClick={handleEventDblClick}
-              />
+              <div className="calendar-wrapper">
+                <CalendarView
+                  key={calReset}
+                  events={events}
+                  onEventsChange={onEventsChange}
+                  onEventDblClick={handleEventDblClick}
+                  onSelectSlot={handleSelectSlot}
+                />
+              </div>
             </div>
           </>
         )}
-         
+
         {currentPage === "kanban" && (
           <div className="main kanban-main">
             <KanbanBoard
@@ -635,103 +575,120 @@ const saveModal = useCallback(() => {
         )}
       </div>
 
+      {/* THEME MENU (floating, long-press). Rendered as a simple block; styles in CSS */}
+      {menuOpen && (
+        <div className="theme-menu" role="menu">
+          {THEMES.map(t => (
+            <button
+              key={t.id}
+              className={`theme-menu-item${theme === t.id ? " is-active" : ""}`}
+              data-themeid={t.id}
+              type="button"
+            >
+              {t.title}
+            </button>
+          ))}
+        </div>
+      )}
 
+      {/* TASK MODAL */}
       {isTaskModalOpen && (
-        <div
-          className="tm-modal-overlay"
-          onMouseDown={(evt) => evt.stopPropagation()}
-        >
-          <div
-            className="tm-modal"
-            onMouseDown={(evt) => evt.stopPropagation()}
-            onClick={(evt) => evt.stopPropagation()}
-          >
-            <h2 id="tm-modal-title" className="tm-modal-title">Task</h2>
+        <div className="tm-modal-overlay" role="dialog" aria-modal="true">
+          <div className="tm-modal">
+            <h3 className="tm-modal-title">
+              {editingTaskId ? "Edit Task" : "New Task"}
+            </h3>
 
-            <label className="tm-label" htmlFor="tm-task-title">Title</label>
+            <label className="tm-label">Title</label>
             <input
-              id="tm-task-title"
               className="tm-input"
-              required
               value={draftTitle}
               onChange={(e) => setDraftTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  saveModal();
-                }
-              }}
-              maxLength={70}
+              placeholder="Enter title"
+              autoFocus
             />
 
-            <label className="tm-label" htmlFor="tm-task-desc">Description</label>
+            <label className="tm-label">Description</label>
             <textarea
-              id="tm-task-desc"
               className="tm-textarea"
               value={draftDescription}
               onChange={(e) => setDraftDescription(e.target.value)}
+              placeholder="Optional"
               rows={4}
             />
 
-            <label className="tm-label" htmlFor="tm-task-est">Estimation, h</label>
-            <input
-              id="tm-task-est"
-              className="tm-input-small"
-              type="number"
-              step={0.25}
-              min={0}
-              value={draftEstimate}
-              onChange={(e) => setDraftEstimate(Number(e.target.value))}
-            />
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: "0 0 auto" }}>
+                <label className="tm-label">Estimate (hours)</label>
+                <input
+                  type="number"
+                  step={0.25}
+                  min={0}
+                  className="tm-input-small"
+                  value={draftEstimate}
+                  onChange={(e) => setDraftEstimate(Number(e.target.value))}
+                />
+              </div>
 
-            <label className="tm-label" htmlFor="tm-task-status">Status</label>
-            <input
-              id="tm-task-status"
-              className="tm-input"
-              value={draftStatus}
-              onChange={(e) => setDraftStatus(e.target.value)}
-              list="statuses-list"
-              maxLength={20}
-            />
-            <datalist id="statuses-list">
-              {statuses.map((status) => (
-                <option key={status} value={status} />
-              ))}
-            </datalist>
+              <div style={{ flex: 1 }}>
+                <label className="tm-label">Status</label>
+                <input
+                  list="status-options"
+                  className="tm-input"
+                  value={draftStatus}
+                  onChange={(e) => setDraftStatus(e.target.value)}
+                  placeholder="Type or choose…"
+                />
+                <datalist id="status-options">
+                  {statuses.map((status) => (
+                    <option key={status} value={status} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
 
             <div className="tm-modal-actions">
-              <button
-                type="button"
-                className="tm-btn tm-btn-danger tm-btn-left"
-                onClick={(e) => deleteTask(e)}
-                data-testid="delete-task"
-              >
-                Delete task
-              </button>
+              {editingTaskId && (
+                <button
+                  type="button"
+                  className="tm-btn tm-btn-danger tm-btn-left"
+                  onClick={(e) => deleteTask(e)}
+                  data-testid="delete-task"
+                >
+                  Delete task
+                </button>
+              )}
+
               <div className="tm-actions-right">
-                <button type="button" onClick={closeModal} className="tm-btn">Cancel</button>
-                <button type="button" onClick={saveModal} className="tm-btn tm-btn-primary" disabled={!draftTitle.trim()}>Save</button>
+                <button className="tm-btn" onClick={closeModal}>
+                  Cancel
+                </button>
+                <button
+                  className="tm-btn tm-btn-primary"
+                  onClick={saveModal}
+                  data-testid="save-task"
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Confirmation modal for "Delete All Tasks" */}
+      {/* DELETE-ALL CONFIRM */}
       {isConfirmModalOpen && (
-        <div
-          className="tm-modal-overlay"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
+        <div className="tm-modal-overlay" role="dialog" aria-modal="true">
           <div className="tm-modal">
-            <h2 className="tm-modal-title">Confirm Deletion</h2>
-            <p>Are you sure you want to delete all tasks? This action cannot be undone.</p>
+            <h3 className="tm-modal-title">Delete all tasks?</h3>
+            <p className="task-desc">This will remove all tasks and all calendar events.</p>
             <div className="tm-modal-actions">
               <button
                 className="tm-btn tm-btn-danger"
                 onClick={handleDeleteAllTasks}
+                data-testid="confirm-delete-all"
               >
-                Yes, Delete All
+                Delete all
               </button>
               <button
                 className="tm-btn"

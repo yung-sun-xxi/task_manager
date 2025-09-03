@@ -1,7 +1,8 @@
 /* src/App.css */
 .app-shell {
   display: flex;
-  flex-direction: column; /* Изменяем на column для размещения навигации сверху */
+  flex-direction: column;
+  /* Изменяем на column для размещения навигации сверху */
   height: 100vh;
   overflow: hidden;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
@@ -9,11 +10,13 @@
   color: var(--color-text);
 }
 
+
 /* Новый контейнер для сайдбара и основного контента */
 .main-content-row {
   display: flex;
   flex-direction: row;
-  height: 100%; /* Занимает всю оставшуюся высоту */
+  height: 100%;
+  /* Занимает всю оставшуюся высоту */
   overflow: hidden;
 }
 
@@ -29,6 +32,7 @@
   padding: 0 15px 0 10px;
 }
 
+
 /* Sidebar resizer styling */
 .sidebar-resizer {
   position: absolute;
@@ -42,9 +46,11 @@
   z-index: 10;
 }
 
+
 .sidebar-resizer:hover {
   background: var(--color-sidebar-resizer-hover-bg);
 }
+
 
 .main {
   flex: 1 1 auto;
@@ -52,15 +58,18 @@
   overflow: hidden auto;
 }
 
+
 .calendar-wrapper {
   height: 100%;
   padding: 8px 12px;
 }
 
+
 /* ---- Sidebar ---- */
 .sidebar-inner {
   padding: 0;
 }
+
 
 .sidebar-title {
   font-size: 18px;
@@ -69,11 +78,18 @@
   color: var(--color-sidebar-title);
 }
 
+
 .task-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  display: grid;
+  row-gap: 8px;
 }
+
 
 .tm-task-item {
   border: 1px solid var(--color-border) !important;
@@ -83,11 +99,23 @@
   box-shadow: 0 1px 1px var(--color-shadow);
   color: var(--color-text) !important;
   background: var(--color-task-card-bg) !important;
+  transition: box-shadow 140ms ease;
+  /* Оптимизация для плавного движения */
+  will-change: transform;
 }
+
 
 .tm-task-item:active {
   cursor: grabbing;
 }
+
+
+/* Когда карточка из сайдбара тащится поверх зоны календаря */
+.tm-task-item.dragging.dragging-over-calendar,
+.tm-task-ghost.dragging-over-calendar {
+  background: var(--color-task-card-bg-drag-over-calendar) !important;
+}
+
 
 .task-header {
   display: flex;
@@ -96,6 +124,7 @@
   margin-bottom: 8px;
 }
 
+
 .task-title {
   font-weight: 600;
   line-height: 1.35;
@@ -103,6 +132,7 @@
   min-width: 0;
   flex-shrink: 1;
 }
+
 
 .task-hours {
   font-variant-numeric: tabular-nums;
@@ -113,6 +143,7 @@
   font-size: 12px;
 }
 
+
 .task-desc {
   color: var(--color-muted);
   font-size: 12px;
@@ -121,9 +152,11 @@
 }
 
 
+
 .task-controls input[type="number"] {
   width: 90px;
 }
+
 
 /* ---- Modal ---- */
 .tm-modal-overlay {
@@ -135,6 +168,7 @@
   z-index: 1000;
 }
 
+
 .tm-modal {
   width: min(560px, 92vw);
   border-radius: 14px;
@@ -144,12 +178,14 @@
   background: var(--color-modal-bg) !important;
 }
 
+
 .tm-modal-title {
   margin: 0 0 12px;
   font-size: 18px;
   font-weight: 700;
   color: var(--color-modal-text) !important;
 }
+
 
 .tm-label {
   display: block;
@@ -158,8 +194,8 @@
   margin: 8px 0 4px;
 }
 
-.tm-input,
-.tm-textarea {
+
+.tm-input, .tm-textarea {
   width: 100%;
   border: 1px solid var(--color-modal-input-border) !important;
   border-radius: 10px;
@@ -169,15 +205,17 @@
   color: var(--color-modal-text) !important;
 }
 
-.tm-input:focus,
-.tm-textarea:focus {
+
+.tm-input:focus, .tm-textarea:focus {
   border-color: var(--color-modal-input-focus-border) !important;
   box-shadow: 0 0 0 3px var(--color-modal-input-focus-shadow) !important;
 }
 
+
 .tm-textarea {
   resize: vertical;
 }
+
 
 /* New class for a compact input field */
 .tm-input-small {
@@ -190,6 +228,7 @@
   color: var(--color-modal-text) !important;
 }
 
+
 .tm-modal-actions {
   margin-top: 14px;
   display: flex;
@@ -199,16 +238,19 @@
   min-height: 44px;
 }
 
+
 .tm-btn-left {
   position: absolute;
   left: 18px;
   bottom: 18px;
 }
 
+
 .tm-actions-right {
   display: flex;
   gap: 8px;
 }
+
 
 .tm-btn {
   display: inline-flex;
@@ -225,30 +267,45 @@
   user-select: none;
 }
 
-.tm-btn:hover { background: var(--hover-secondary-bg) !important; }
+
+.tm-btn:hover {
+  background: var(--hover-secondary-bg) !important;
+}
+
 .tm-btn-primary {
   border-color: var(--color-button-save-border) !important;
   background: var(--color-button-save-bg) !important;
   color: var(--color-button-save-text) !important;
 }
-.tm-btn-primary:hover { background: var(--hover-primary-bg) !important; }
+
+.tm-btn-primary:hover {
+  background: var(--hover-primary-bg) !important;
+}
+
 .tm-btn-danger {
   border-color: var(--color-button-delete-border) !important;
   background: var(--color-button-delete-bg) !important;
+  /* background: rgb(0, 0, 0) !important; */
   color: var(--color-button-delete-text) !important;
+  /* стили для красной кнопки */
 }
-.tm-btn-danger:hover { background: var(--hover-secondary-bg) !important; }
+
+.tm-btn-danger:hover {
+  background: var(--hover-secondary-bg) !important;
+}
+
 
 /* Remove arrows from number input fields */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
+
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
 
 /* ---- Task Bar Chart ---- */
 .task-bar-row {
@@ -257,6 +314,7 @@ input[type="number"] {
   justify-content: space-between;
   gap: 15px;
 }
+
 
 .task-bar-container {
   flex-grow: 1;
@@ -268,11 +326,13 @@ input[type="number"] {
   overflow: hidden;
 }
 
+
 .task-bar-fill {
   height: 100%;
   background: none;
   transition: width 0.3s ease-in-out;
 }
+
 
 .task-bar-label {
   font-size: 12px;
@@ -281,6 +341,7 @@ input[type="number"] {
   margin-bottom: 0;
   white-space: nowrap;
 }
+
 
 /* Sidebar header with add button */
 .sidebar-title-row {
@@ -291,6 +352,7 @@ input[type="number"] {
   margin: 8px 0 12px;
 }
 
+
 .tm-btn-icon {
   width: 36px;
   height: 36px;
@@ -299,6 +361,7 @@ input[type="number"] {
   font-size: 20px;
   line-height: 1;
 }
+
 
 /* Theme toggle button (top-right) */
 .theme-toggle-btn {
@@ -313,9 +376,11 @@ input[type="number"] {
   line-height: 1;
   user-select: none;
 }
+
 .theme-toggle-btn:hover {
   background: var(--hover-primary-bg);
 }
+
 
 /* ---- Theme chooser menu (appears on long press) ---- */
 .theme-menu {
@@ -332,6 +397,7 @@ input[type="number"] {
   min-width: 160px;
 }
 
+
 .theme-menu-item {
   display: block;
   width: 100%;
@@ -344,36 +410,45 @@ input[type="number"] {
   font-size: 14px;
   cursor: pointer;
 }
+
 .theme-menu-item:hover {
   background: var(--hover-secondary-bg);
 }
+
 .theme-menu-item.is-active {
   outline: 2px solid var(--color-calendar-nav-button-border);
 }
+
 
 /* visual highlight while dragging over an item */
 .theme-menu-item.is-hover {
   background: var(--hover-secondary-bg);
 }
 
+
 .view-switcher-container {
   display: flex;
   gap: 12px;
-  justify-content: space-between; /* Распределяет элементы по краям */
-  align-items: center; /* Выравнивает элементы по центру по вертикали */
+  justify-content: space-between;
+  /* Распределяет элементы по краям */
+  align-items: center;
+  /* Выравнивает элементы по центру по вертикали */
   padding: 12px;
   padding-bottom: 24px;
   border-bottom: 3px solid var(--color-divider);
   background: transparent;
 }
 
+
 /* Контейнер для центрирования кнопки */
 .center-actions {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1; /* Позволяет этому блоку растягиваться и толкать другие элементы */
+  flex: 1;
+  /* Позволяет этому блоку растягиваться и толкать другие элементы */
 }
+
 
 /* Контейнер для кнопки темы */
 .right-actions {
@@ -381,6 +456,7 @@ input[type="number"] {
   justify-content: flex-end;
   align-items: center;
 }
+
 
 .view-switcher-btn {
   padding: 0 12px;
@@ -395,23 +471,28 @@ input[type="number"] {
   user-select: none;
 }
 
+
 .view-switcher-btn.is-active {
   background: var(--color-sidebar-button-bg);
   color: var(--color-sidebar-button-active-text);
   border: 3px solid var(--color-sidebar-button-active-text);
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  border: 1px solid var(--color-sidebar-button-active-text);
 }
+
 
 /* Kanban board main container */
 .kanban-main {
   padding: 12px;
 }
 
+
 .kanban-board-container {
   display: flex;
   gap: 16px;
   height: 100%;
 }
+
 
 .kanban-column {
   flex: 0 0 300px;
@@ -423,11 +504,13 @@ input[type="number"] {
   flex-direction: column;
 }
 
+
 .kanban-column-header {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--color-border);
   margin-bottom: 12px;
 }
+
 
 .kanban-column-header h3 {
   margin: 0;
@@ -436,28 +519,28 @@ input[type="number"] {
   color: var(--color-text);
 }
 
+
 .kanban-column-tasks {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+
 .kanban-column .tm-task-item {
   width: 100%;
 }
 
+
 .top-right-actions {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 110;
-    display: flex;
-    gap: 8px;
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 110;
+  display: flex;
+  gap: 8px;
 }
 
-.tm-btn-danger {
-    /* стили для красной кнопки */
-}
 
 /* Добавь в App.css */
 .kanban-drop-indicator {
@@ -466,26 +549,273 @@ input[type="number"] {
   background: var(--color-sidebar-button-active-text);
   margin: 6px 0;
 }
-.kanban-empty { padding: 8px 0 4px; opacity: 0.7; }
-.kanban-empty-hint { padding: 6px 8px; border: 1px dashed var(--color-border); border-radius: 8px; text-align: center; }
-.kanban-bottom-dropzone { height: 12px; } /* «якорь» для дропа в конец */
+
+.kanban-empty {
+  padding: 8px 0 4px;
+  opacity: 0.7;
+}
+
+.kanban-empty-hint {
+  padding: 6px 8px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.kanban-bottom-dropzone {
+  height: 12px;
+}
+ /* «якорь» для дропа в конец */
 
 .left-actions {
   display: flex;
   align-items: center;
-  gap: 8px;   /* <-- вот это расстояние между Calendar и Kanban */
+  gap: 8px;
+  /* <-- вот это расстояние между Calendar и Kanban */
 }
+
 
 /* Добавьте это */
 .kanban-column-tasks .tm-task-item {
-  width: auto; /* или любое другое фиксированное значение, если нужно */
-  max-width: 100%; /* чтобы не вылезло за пределы колонки */
+  width: auto;
+  /* или любое другое фиксированное значение, если нужно */
+  max-width: 100%;
+  /* чтобы не вылезло за пределы колонки */
 }
+
 
 /* И добавьте это для фикса ширины при драгге */
 .tm-task-item.dragging {
-  width: calc(100% - 24px); /* или любое другое значение, соответствующее padding колонки */
-  max-width: 250px; /* или любая другая ширина карточки */
+  width: calc(100% - 24px);
+  /* или любое другое значение, соответствующее padding колонки */
+  max-width: 250px;
+  /* или любая другая ширина карточки */
   position: fixed;
+  position: absolute;
+  cursor: grabbing;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  opacity: 0.98;
+  box-shadow: 0 8px 28px rgba(0,0,0,.2);
+  pointer-events: none;
+  /* чтобы не мешать хит-тесту */
 }
+
+
+/* ==== Двухстрочный заголовок дней ==== */
+.fc .fc-col-header-cell .fc-day-two-line {
+  line-height: 1.1;
+  white-space: nowrap;
+  text-align: center;
+  font-weight: 600;
+}
+
+.fc .fc-col-header-cell .fc-day-two-line span:first-child {
+  display: inline-block;
+  opacity: 0.95;
+}
+
+.fc .fc-col-header-cell .fc-day-two-line span:last-child {
+  display: inline-block;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==== Верхний хедер приложения: вертикальное центрирование ==== */
+.view-switcher-container, .left-actions, .center-actions, .right-actions {
+  display: flex;
+  align-items: center;
+  /* вертикально по центру */
+  min-height: 44px;
+  /* единая высота строки хедера */
+}
+
+.view-switcher-btn, .tm-btn, .theme-toggle-btn {
+  height: 36px;
+  line-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  /* выравнивание текста/иконок внутри */
+}
+
+
+/* ==== Внутренний reorder сайдбара: визуальная подсветка места вставки ==== */
+.tm-task-item.is-drag-over {
+  outline: 2px dashed var(--color-sidebar-button-active-text);
+  outline-offset: 3px;
+}
+
+
+/* ========== FullCalendar nav arrows: no bg/border/hover ========== */
+.fc .fc-toolbar .fc-button.fc-NavPrev-button, .fc .fc-toolbar .fc-button.fc-NavNext-button {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--color-text) !important;
+}
+
+.fc .fc-toolbar .fc-button.fc-NavPrev-button:hover, .fc .fc-toolbar .fc-button.fc-NavNext-button:hover, .fc .fc-toolbar .fc-button.fc-NavPrev-button:focus, .fc .fc-toolbar .fc-button.fc-NavNext-button:focus, .fc .fc-toolbar .fc-button.fc-NavPrev-button:active, .fc .fc-toolbar .fc-button.fc-NavNext-button:active {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--color-text) !important;
+}
+
+.fc .fc-prev-button .fc-icon,
+.fc .fc-next-button .fc-icon {
+  font-size: 1.8em !important; /* больше размер */
+  font-weight: bold !important;
+}
+
+
+/* === Today = как у Add Task на ховере (ПРАВИЛЬНОЕ имя класса) === */
+html.theme-light .fc .fc-Today-button {
+  border: 1px solid var(--color-button-save-border) !important;
+  background: var(--color-button-save-bg) !important;
+  color: var(--color-button-save-text) !important;
+  height: 36px;
+  line-height: 36px;
+  border-radius: 10px;
+}
+
+
+html.theme-light .fc .fc-Today-button:hover, html.theme-light .fc .fc-Today-button:focus {
+  background: var(--hover-primary-bg) !important;
+  /* светло-розовый, как у Add Task hover */
+  border: 1px solid transparent !important;
+  /* убрать чёрную рамку */
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--color-button-save-text) !important;
+}
+
+
+/* spacer с плавной анимацией высоты */
+.kanban-placeholder {
+  width: 100%;
+}
+
+
+/* Tauri/WebKit: запретить "перетаскивание окна" в сайдбаре и его дочерних */
+.tm-sidebar, .tm-sidebar * {
+  -webkit-app-region: no-drag;
+}
+
+
+.reorder-handle {
+  cursor: grab;
+  user-select: none;
+  padding: 4px 6px;
+  touch-action: none;
+}
+
+.reorder-handle:active {
+  cursor: grabbing;
+}
+
+
+.tm-ghost-placeholder {
+  width: 100%;
+}
+
+
+/* исходная карточка остаётся на месте, просто прячется */
+.tm-task-item.dragging-origin {
+  visibility: visible;
+  /* будет переключаться inline-стилем на hidden только в момент старта */
+  will-change: transform;
+}
+
+
+/* фантом, который катается за курсором */
+.tm-task-ghost {
+  pointer-events: none;
+  border-radius: 12px;
+  /* под твой стиль */
+  background: var(--color-task-card-bg, #fff);
+  opacity: 0.98;
+}
+
+/* ===== Верхняя панель (settings bar) ===== */
+.settings-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  background: #F5F5F7;
+  border-bottom: 1px solid var(--color-border);
+  height: 80px;
+}
+
+.settings-left,
+.settings-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== Вкладки (Safari-style) ===== */
+.tabs-bar {
+  display: inline-flex;
+  gap: 0px;
+  padding-left: 0;
+  padding-right: 0; 
+  /* border-bottom: 2px solid var(--color-divider); */
+  background: var(--pale-dogwood);
+  height: 40px;
+}
+
+.tab-btn {
+  width: 160px;
+  text-align: center;
+  padding: 0 14px;
+  border: none;
+  cursor: pointer;
+  background: #E5E5E7;             /* светло-серый фон */
+  color: rgba(0, 0, 0, 0.65);      /* слегка приглушённый текст */
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: inset 0 3px 4px rgba(0,0,0,0.08); /* внутренняя тень только сверху */
+  border-radius: 1px 1px 1px 1px;
+}
+
+.tab-btn:hover {
+  background: #c0c0c0;           /* при наведении светлее, почти как активная */
+  color: rgba(0, 0, 0, 0.8);    /* текст становится более читаемым */
+}
+
+.tab-btn.is-active {
+  background: #F5F5F7;             /* как у верхней панели */
+  color: #000;
+  box-shadow: none;                /* активная — без теней */
+  border-radius: 1px 1px 1px 1px;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--color-button-delete-border);
+  background: var(--color-button-delete-bg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.icon-btn img {
+  width: 18px; height: 18px; display: block;
+}
+
+/* hover/focus стили как у остальных кнопок */
+.icon-btn:hover { background: var(--hover-secondary-bg); }
+.icon-btn:focus-visible {
+  outline: 3px solid var(--color-modal-input-focus-shadow);
+  outline-offset: 2px;
+}
+
+/* конкретно для delete — можно подкрасить svg через currentColor, если svg без заливки */
+.delete-btn { color: var(--color-button-delete-text); }

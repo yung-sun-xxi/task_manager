@@ -14,6 +14,7 @@ import type { EventReceiveArg } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
+import enGbLocale from '@fullcalendar/core/locales/en-gb';
 
 export type PlainEvent = {
   id: string;
@@ -170,62 +171,122 @@ const CalendarView: React.FC<Props> = (props) => {
     borderColor: ev.borderColor,
   }));
 
-  return (
-    <div className="calendar-wrapper">
-      <FullCalendar
-        ref={calRef as any}
-        plugins={[timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        slotDuration="00:15:00"
-        snapDuration="00:15:00"
-        defaultTimedEventDuration="00:15:00"
-        selectable={true}
-        selectMirror={true}
-        nowIndicator={false}
-        droppable={true}
-        editable={true}
-        eventResizableFromStart={true}
-        allDaySlot={false}
-        slotMinTime="09:00:00"
-        slotMaxTime="21:15:00"
-        slotLabelInterval="01:00"
-        slotLabelFormat={{
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }}
-        dayHeaderFormat={{
-          weekday: "short",
-          day: "2-digit",
-          month: "2-digit",
-        }}
-        customButtons={{
-          Today: {
-            text: "Today",
-            click: () => {
-              (calRef.current as any)?.getApi().today();
-            },
+  // Форматер для второй строки заголовка (ММ ДД)
+  const fmtMD = new Intl.DateTimeFormat(undefined, { month: "2-digit", day: "2-digit" });
+
+// ① внутри компонента CalendarView:
+const calendarRootRef = React.useRef<HTMLDivElement>(null);
+
+// Тогглим класс и на исходной карточке (.tm-task-item.dragging), и на фантоме (.tm-task-ghost)
+const toggleDraggingOverCalendar = React.useCallback((on: boolean) => {
+  const els = document.querySelectorAll<HTMLElement>(".tm-task-item.dragging, .tm-task-ghost");
+  els.forEach(el => el.classList.toggle("dragging-over-calendar", on));
+}, []);
+
+// ВАЖНО: поддержим и нативный DnD, и твой кастомный pointer-drag
+const handleEnter = React.useCallback(() => toggleDraggingOverCalendar(true), [toggleDraggingOverCalendar]);
+const handleLeave = React.useCallback(() => toggleDraggingOverCalendar(false), [toggleDraggingOverCalendar]);
+
+// Для нативного HTML5 DnD — разрешаем drop и держим подсветку
+const handleDragEnter = React.useCallback((e: React.DragEvent) => { e.preventDefault(); handleEnter(); }, [handleEnter]);
+const handleDragOver  = React.useCallback((e: React.DragEvent) => { e.preventDefault(); handleEnter(); }, [handleEnter]);
+const handleDragLeave = React.useCallback(() => { handleLeave(); }, [handleLeave]);
+const handleDrop      = React.useCallback((e: React.DragEvent) => { e.preventDefault(); handleLeave(); }, [handleLeave]);
+
+return (
+    <div
+      ref={calendarRootRef}
+      className="calendar-wrapper"
+      onPointerEnter={handleEnter}
+      onPointerLeave={handleLeave}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+    <FullCalendar
+      /* === Фикс заголовков столбцов: DD/MM и двухстрочный вид === */
+      views={{
+        timeGridWeek: {
+          dayHeaderContent: ({ date }) => {
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short' }).format(date);
+            return { html: `<div class="fc-day-two-line"><span>${weekday}</span><br/><span>${dd}/${mm}</span></div>` };
           },
-        }}
-        headerToolbar={{
-          left: "prev,next Today",
-          center: "title",
-          right: "",
-        }}
-        events={fcEvents}
-        select={handleSelect}
-        dateClick={handleDateClick}    // ← двойной клик по пустому месту
-        eventAdd={handleEventAdd}
-        eventChange={handleEventChange}
-        eventRemove={handleEventRemove}
-        eventReceive={handleEventReceive}   // ← внешний DnD из Sidebar
-        eventDidMount={eventDidMount}
-        height="100%"
-        themeSystem="bootstrap5"
-        eventClassNames="my-event"
-      />
-    </div>
-  );
+        },
+        timeGridDay: {
+          dayHeaderContent: ({ date }) => {
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short' }).format(date);
+            return { html: `<div class="fc-day-two-line"><span>${weekday}</span><br/><span>${dd}/${mm}</span></div>` };
+          },
+        },
+      }}
+
+      firstDay={1} /* неделя с понедельника */
+      ref={calRef as any}
+      plugins={[timeGridPlugin, interactionPlugin]}
+      initialView="timeGridWeek"
+      slotDuration="00:15:00"
+      snapDuration="00:15:00"
+      defaultTimedEventDuration="00:15:00"
+      selectable={true}
+      selectMirror={true}
+      nowIndicator={false}
+      droppable={true}
+      editable={true}
+      eventResizableFromStart={true}
+      allDaySlot={false}
+      slotMinTime="09:00:00"
+      slotMaxTime="21:15:00"
+      slotLabelInterval="01:00"
+      slotLabelFormat={{
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }}
+
+      /* ⚠️ ВАЖНО: удалили общий dayHeaderContent с fmtMD, чтобы не падало */
+
+      /* Кастомные кнопки навигации */
+      customButtons={{
+        NavPrev: {
+          text: "‹",
+          click: () => (calRef.current as any)?.getApi?.().prev?.(),
+        },
+        NavNext: {
+          text: "›",
+          click: () => (calRef.current as any)?.getApi?.().next?.(),
+        },
+        Today: {
+          text: "Today",
+          click: () => (calRef.current as any)?.getApi?.().today?.(),
+        },
+      }}
+      headerToolbar={{
+        left: "NavPrev,NavNext Today",
+        center: "title",
+        right: "",
+      }}
+
+      events={fcEvents}
+      select={handleSelect}
+      dateClick={handleDateClick}
+      eventAdd={handleEventAdd}
+      eventChange={handleEventChange}
+      eventRemove={handleEventRemove}
+      eventReceive={handleEventReceive}
+      eventDidMount={eventDidMount}
+      height="100%"
+      eventClassNames="my-event"
+    />
+  </div>
+);
+
 };
 
 export default CalendarView;
